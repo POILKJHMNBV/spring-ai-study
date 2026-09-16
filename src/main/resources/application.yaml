@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: spring-ai-study
+  ai:
+    ollama:
+      chat:
+        model: qwen3.5:9b
+      embedding:
+        model: mxbai-embed-large
+        truncate: true
+
+logging:
+  level:
+    org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: info
