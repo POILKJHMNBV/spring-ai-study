@@ -1,0 +1,55 @@
+id|split|domain|sections|query
+A01|acceptance|thread-pool|thread-pool:1,thread-pool:2,thread-pool:7|线程池打满
+A02|acceptance|thread-pool|thread-pool:1,thread-pool:2|执行器没有空闲线程
+A03|acceptance|kafka|kafka:2,kafka:3,kafka:6|Kafka 消费积压
+A04|acceptance|kafka|kafka:2,kafka:6|生产速度高于消费速度
+A05|acceptance|mysql|mysql:1,mysql:3,mysql:7|数据库查询越来越慢
+A06|acceptance|mysql|mysql:2,mysql:6|连接池快满了
+D01|dev|thread-pool|thread-pool:1,thread-pool:2,thread-pool:4|工作线程都忙着，新任务只能排队
+D02|dev|thread-pool|thread-pool:2,thread-pool:4|执行器拒绝提交的任务
+D03|dev|thread-pool|thread-pool:1,thread-pool:2,thread-pool:7|线程池队列持续变长
+D04|dev|thread-pool|thread-pool:2,thread-pool:4|RejectedExecutionException
+D05|dev|kafka|kafka:2,kafka:6|消息进来的比处理掉的多
+D06|dev|kafka|kafka:2,kafka:6|消费者一直追不上生产者
+D07|dev|kafka|kafka:2,kafka:6|消费组的 lag 不断上涨
+D08|dev|kafka|kafka:4|分区数量会限制消费者并行度吗
+D09|dev|mysql|mysql:1,mysql:4|SQL 响应耗时持续上升
+D10|dev|mysql|mysql:2,mysql:5|HikariCP 获取连接一直等待
+D11|dev|mysql|mysql:2,mysql:6|数据库连接用尽，业务拿不到连接
+D12|dev|mysql|mysql:3,mysql:5|慢 SQL 应该如何检查索引和锁
+D13|dev|thread-pool|thread-pool:2,thread-pool:4|TaskRejectedException 是什么异常
+D14|dev|thread-pool|thread-pool:5|业务线程池饱和为什么会使 Kafka 消费变慢
+D15|dev|kafka|kafka:4|Consumer 比 Partition 多还有用吗
+D16|dev|kafka|kafka:2|consumeRate 大于 produceRate，积压正在下降
+D17|dev|mysql|mysql:2|activeConnections 接近 maximumPoolSize 且 pendingThreads 增加
+D18|dev|mysql|mysql:4,mysql:6|数据库响应慢为什么会让 Java 业务线程等待
+D19|dev|none|-|今天天气怎么样
+D20|dev|none|-|如何烤一块巧克力蛋糕
+D21|dev|none|-|Kubernetes 证书过期如何更新
+D22|dev|none|-|Redis 主从复制断开怎么修复
+D23|dev|none|-|如何申请报销差旅费用
+D24|dev|none|-|Nginx HTTPS 证书续期步骤
+H01|holdout|thread-pool|thread-pool:1,thread-pool:2|池里的工作线程一个也腾不出来
+H02|holdout|thread-pool|thread-pool:2,thread-pool:4|提交任务时抛出 RejectedExecutionException 怎么排查
+H03|holdout|thread-pool|thread-pool:1,thread-pool:4,thread-pool:6|threadPoolActive 和 threadPoolMax 一样大
+H04|holdout|thread-pool|thread-pool:3,thread-pool:7|线程全部阻塞在下游 RPC，应该直接扩线程吗
+H05|holdout|thread-pool|thread-pool:5|消费业务的执行器满载后 lag 升高
+H06|holdout|thread-pool|thread-pool:1,thread-pool:2,thread-pool:4|任务等待时间拉长，执行器队列不断堆高
+H07|holdout|kafka|kafka:2,kafka:6|写入消息的速率一直超过消费者处理速率
+H08|holdout|kafka|kafka:1,kafka:2|消费位点落后最新 offset 很多代表什么
+H09|holdout|kafka|kafka:4|八个分区只安排一个消费者会影响吞吐吗
+H10|holdout|kafka|kafka:2|峰值结束后消费比生产快，lag 在回落
+H11|holdout|kafka|kafka:3|消费组频繁 Rebalance 会造成积压吗
+H12|holdout|kafka|kafka:5,kafka:7|Kafka 处理不过来，扩消费者前先查什么
+H13|holdout|mysql|mysql:1,mysql:5,mysql:6|SQL 的 P99 最近持续恶化
+H14|holdout|mysql|mysql:2|HikariCP 没有闲置连接，线程排队取连接
+H15|holdout|mysql|mysql:3,mysql:5|查询扫描行数太多该检查执行计划吗
+H16|holdout|mysql|mysql:3,mysql:5|长事务和锁等待会使 SQL 变慢吗
+H17|holdout|mysql|mysql:4,mysql:6|SQL 返回很慢导致连接长时间不释放
+H18|holdout|mysql|mysql:7|MySQL 已经很忙，调大连接数能解决吗
+H19|holdout|none|-|明天适合去爬山吗
+H20|holdout|none|-|帮我翻译一首英文诗
+H21|holdout|none|-|Elasticsearch 分片无法分配怎么办
+H22|holdout|none|-|如何排查 DNS 解析失败
+H23|holdout|none|-|Linux 磁盘只读如何修复
+H24|holdout|none|-|Redis 缓存雪崩如何预防

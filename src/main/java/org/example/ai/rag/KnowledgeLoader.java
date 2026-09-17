@@ -3,168 +3,139 @@ package org.example.ai.rag;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.ai.document.Document;
-import org.springframework.ai.transformer.splitter.TokenTextSplitter;
+import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StopWatch;
+import org.springframework.web.client.RestClient;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Instant;
+import java.util.*;
 
+/**
+ * 加载知识库数据存入向量数据库
+ */
 @Slf4j
 @Component
 @NullMarked
 public class KnowledgeLoader implements ApplicationRunner {
-    private static final String KNOWLEDGE_PATTERN = "classpath*:knowledge/*.md";
     private final VectorStore vectorStore;
-    private final MarkdownSectionSplitter markdownSectionSplitter;
-    private final PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+    private final MarkdownSectionSplitter splitter;
+    private final EmbeddingModel embeddingModel;
+    private final String model;
+    private final String baseUrl;
+    private final boolean truncate;
+    private final Path manifestPath;
 
-    private final TokenTextSplitter splitter =
-            TokenTextSplitter.builder()
-                    .withChunkSize(400)
-                    .withMinChunkSizeChars(150)
-                    .withMinChunkLengthToEmbed(20)
-                    .withMaxNumChunks(100)
-                    .withKeepSeparator(true)
-                    .withPunctuationMarks(
-                            List.of(
-                                    '。',
-                                    '！',
-                                    '？',
-                                    '；',
-                                    '\n',
-                                    '.',
-                                    '!',
-                                    '?'
-                            )
-                    )
-                    .build();
-
-    public KnowledgeLoader(VectorStore vectorStore, MarkdownSectionSplitter markdownSectionSplitter) {
+    public KnowledgeLoader(VectorStore vectorStore,
+                           MarkdownSectionSplitter splitter,
+                           EmbeddingModel embeddingModel,
+                           @Value("${spring.ai.ollama.embedding.model}") String model,
+                           @Value("${spring.ai.ollama.base-url:http://localhost:11434}") String baseUrl,
+                           @Value("${spring.ai.ollama.embedding.truncate:false}") boolean truncate,
+                           @Value("${rag.index.manifest-path:target/rag-index/manifest.json}") String manifestPath) {
         this.vectorStore = vectorStore;
-        this.markdownSectionSplitter = markdownSectionSplitter;
+        this.splitter = splitter;
+        this.embeddingModel = embeddingModel;
+        this.model = model;
+        this.baseUrl = baseUrl;
+        this.truncate = truncate;
+        this.manifestPath = Path.of(manifestPath);
     }
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        Resource[] resources = resolver.getResources(KNOWLEDGE_PATTERN);
+        // 失败启动不得留下上一次成功清单，让诊断人员误认为本轮索引已完成。
+        Files.deleteIfExists(manifestPath);
+        if (truncate) {
+            throw new IllegalStateException("知识索引禁止静默截断，请配置 embedding.truncate=false");
+        }
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
 
+        String digest = modelDigest();
+        Resource[] resources = new PathMatchingResourcePatternResolver().getResources("classpath*:knowledge/*.md");
         if (resources.length == 0) {
-            throw new IllegalStateException("No knowledge documents found");
+            throw new IllegalStateException("未找到知识文档");
         }
 
-        List<Document> allChunks = new ArrayList<>();
-
+        TreeMap<String, String> hashes = new TreeMap<>();
+        int count = 0;
+        // 每次启动都使用全新的内存索引；manifest 仅作诊断，不加载历史向量。
         for (Resource resource : resources) {
+            String source = resource.getFilename();
+            if (Objects.isNull(source) || source.isBlank()) {
+                throw new IllegalStateException("知识来源为空: " + resource);
+            }
             String content;
-            try (InputStream inputStream = resource.getInputStream()) {
-                content = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            try (InputStream stream = resource.getInputStream()) {
+                content = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
             }
-            String source =
-                    resource.getFilename() != null
-                            ? resource.getFilename()
-                            : resource.getDescription();
-
-            List<Document> chunks = markdownSectionSplitter.split(
-                            content,
-                            source);
-
-            allChunks.addAll(chunks);
-
+            if (hashes.put(source, MarkdownSectionSplitter.sha256(content)) != null) {
+                throw new IllegalStateException("知识来源重复: " + source);
+            }
+            List<Document> chunks = splitter.split(content, source);
+            if (chunks.isEmpty()) {
+                throw new IllegalStateException("知识文档没有可索引正文: " + source);
+            }
             for (Document chunk : chunks) {
-                Map<String, Object> metadata = chunk.getMetadata();
-                log.info(
-                        """
-                        
-                        ===== KNOWLEDGE CHUNK =====
-                        source={}
-                        section={}
-                        chunkIndex={}
-                        chars={}
-                        text={}
-                        ===========================
-                        """,
-                        metadata.get("source"),
-                        metadata.get("section"),
-                        metadata.get("chunkIndex"),
-                        chunk.getText() == null
-                                ? 0
-                                : chunk.getText().length(),
-                        chunk.getText()
-                );
+                try {
+                    // 单块导入便于精确定位模型拒绝的 source/section；失败即中止启动。
+                    vectorStore.add(List.of(chunk));
+                } catch (RuntimeException exception) {
+                    throw new IllegalStateException("索引构建失败 source=" + source + " section="
+                            + chunk.getMetadata().get("section") + " chunkId=" + chunk.getId()
+                            + "；如模型报告超长，请减小切分预算后全量重建，禁止开启静默截断", exception);
+                }
+                count++;
             }
         }
+        stopWatch.stop();
 
-        vectorStore.add(allChunks);
-
-        log.info(
-                "Knowledge base loaded: files={}, chunks={}",
-                resources.length,
-                allChunks.size()
-        );
+        Map<String, Object> manifest = new LinkedHashMap<>();
+        manifest.put("model", model);
+        manifest.put("digest", digest);
+        manifest.put("dimensions", embeddingModel.dimensions());
+        manifest.put("sourceHashes", hashes);
+        manifest.put("corpusHash", MarkdownSectionSplitter.sha256(hashes.toString()));
+        manifest.put("splitterVersion", MarkdownSectionSplitter.VERSION);
+        manifest.put("tokenBudget", MarkdownSectionSplitter.TOKEN_BUDGET);
+        manifest.put("tokenEstimator", "JTokkitTokenCountEstimator; not model tokenizer");
+        manifest.put("truncate", false);
+        manifest.put("files", resources.length);
+        manifest.put("chunks", count);
+        manifest.put("builtAt", Instant.now().toString());
+        manifest.put("elapsedMs", stopWatch.getTotalTimeMillis());
+        Files.createDirectories(manifestPath.toAbsolutePath().getParent());
+        Files.writeString(manifestPath, JsonMapper.builder().build().writerWithDefaultPrettyPrinter()
+                .writeValueAsString(manifest), StandardCharsets.UTF_8);
+        log.info("Knowledge index rebuilt: {}", manifest);
     }
 
-    private List<Document> load(Resource resource) throws IOException {
-        String content;
-        try (InputStream inputStream = resource.getInputStream()) {
-            content = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+    private String modelDigest() {
+        JsonNode tags = RestClient.create(baseUrl).get().uri("/api/tags").retrieve().body(JsonNode.class);
+        String canonical = model.contains(":") ? model : model + ":latest";
+        if (Objects.nonNull(tags)) {
+            for (JsonNode item : tags.path("models")) {
+                if (canonical.equals(item.path("name").asString())) {
+                    String digest = item.path("digest").asString();
+                    if (!digest.isBlank()) {
+                        return digest;
+                    }
+                }
+            }
         }
-
-        String source = resource.getFilename() != null
-                        ? resource.getFilename()
-                        : resource.getDescription();
-
-        String title = extractTitle(content, source);
-
-        Document document =
-                Document.builder()
-                        .text(content)
-                        .metadata("source", source)
-                        .metadata("title", title)
-                        .build();
-
-        List<Document> chunks = splitter.apply(List.of(document));
-
-        List<Document> indexedChunks = new ArrayList<>(chunks.size());
-
-        for (int i = 0; i < chunks.size(); i++) {
-
-            Document chunk = chunks.get(i)
-                            .mutate()
-                            .metadata(
-                                    "chunkIndex",
-                                    i
-                            )
-                            .build();
-
-            indexedChunks.add(chunk);
-
-            log.info(
-                    "Knowledge chunk: source={}, index={}, chars={}",
-                    source,
-                    i,
-                    chunk.getText() == null
-                            ? 0
-                            : chunk.getText().length()
-            );
-        }
-
-        return indexedChunks;
-    }
-
-    private String extractTitle(String content, String fallback) {
-        return content.lines()
-                .filter(line -> line.startsWith("# "))
-                .map(line -> line.substring(2).trim())
-                .findFirst()
-                .orElse(fallback);
+        throw new IllegalStateException("本机未安装模型或无法确认 digest: " + canonical);
     }
 }

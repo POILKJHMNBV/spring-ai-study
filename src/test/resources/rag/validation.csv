@@ -1,0 +1,19 @@
+id|split|domain|sections|query
+V01|validation|thread-pool|thread-pool:2,thread-pool:4|业务提交任务收到 TaskRejectedException，需要检查什么
+V02|validation|thread-pool|thread-pool:1,thread-pool:2|执行器活动线程已到上限且队列没有剩余容量
+V03|validation|thread-pool|thread-pool:3,thread-pool:7|每个任务执行越来越久，增加工作线程之前该查什么
+V04|validation|thread-pool|thread-pool:5|Kafka 消息交给线程池执行，线程池阻塞会影响消费吞吐吗
+V05|validation|kafka|kafka:1,kafka:2|Consumer Group 的已消费位点和最新位点差距一直拉大
+V06|validation|kafka|kafka:4|同一消费组的消费者实例比消息分区还多是否有意义
+V07|validation|kafka|kafka:2,kafka:6|produceRate 为每秒九千条，consumeRate 只有每秒三千条
+V08|validation|kafka|kafka:5,kafka:7|消费者扩容可能加重下游数据库的压力吗
+V09|validation|mysql|mysql:2|pendingThreads 持续大于零且 idleConnections 为零意味着什么
+V10|validation|mysql|mysql:1|平均 SQL 耗时没变，P99 却升高了能排除数据库问题吗
+V11|validation|mysql|mysql:3,mysql:5|慢查询伴随大量扫描行和锁等待，应查看哪些信息
+V12|validation|mysql|mysql:6,mysql:7|数据库瓶颈时为什么不应该盲目增大连接池
+V13|validation|none|-|帮我规划周末两日自驾游
+V14|validation|none|-|怎么做番茄炒鸡蛋
+V15|validation|none|-|RabbitMQ 队列镜像同步失败怎么恢复
+V16|validation|none|-|MongoDB 副本集选举频繁失败如何解决
+V17|validation|none|-|JVM Metaspace 内存溢出如何排查
+V18|validation|none|-|Docker 镜像拉取鉴权失败怎么办

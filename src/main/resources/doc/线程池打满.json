@@ -2,71 +2,31 @@
   {
     "source": "thread-pool-exhaustion.md",
     "title": "Java 线程池饱和排查指南",
-    "chunkIndex": 1,
-    "score": 0.4667253613524464,
-    "text": "# Java 线程池饱和排查指南\n\n## 2. 典型异常现象\n\n线程池真正发生饱和时，常见现象包括：\n\n* active 长时间接近或等于 max；\n* 任务队列持续增加；\n* 任务等待时间和 P95/P99 增长；\n* 服务吞吐下降；\n* 出现 `TaskRejectedException` 或 `RejectedExecutionException`。\n\n如果已经出现任务拒绝，可以确认线程池处理能力已经受到影响。"
-  },
-  {
-    "source": "mysql-slow-query.md",
-    "title": "MySQL 慢查询排查指南",
-    "chunkIndex": 5,
-    "score": 0.4570385353874726,
-    "text": "# MySQL 慢查询排查指南\n\n## 6. 判断原则\n\n如果观察到：\n\n```text\nDB P99 明显升高\nactiveConnections 接近 maximumPoolSize\npendingThreads 增长\n```\n\n可以判断数据库响应变慢已经开始影响连接池和上游请求。\n\n但不能仅凭这些指标确认一定是缺少索引、锁等待或某一条 SQL 导致。\n\n这些根因需要继续通过 SQL 和数据库指标验证。"
-  },
-  {
-    "source": "mysql-slow-query.md",
-    "title": "MySQL 慢查询排查指南",
-    "chunkIndex": 6,
-    "score": 0.4554669098695194,
-    "text": "# MySQL 慢查询排查指南\n\n## 7. 处理原则\n\n不要优先通过扩大连接池解决数据库变慢。\n\n正确顺序是：\n\n```text\n确认数据库延迟\n→ 检查连接池\n→ 定位慢 SQL\n→ 检查执行计划 / 锁 / 事务\n→ 优化真正瓶颈\n```\n\n如果数据库本身已经达到处理瓶颈，增加连接数反而可能增加数据库压力。"
-  },
-  {
-    "source": "thread-pool-exhaustion.md",
-    "title": "Java 线程池饱和排查指南",
-    "chunkIndex": 2,
-    "score": 0.45497764512829936,
-    "text": "# Java 线程池饱和排查指南\n\n## 3. 常见原因\n\n线程池饱和通常来自两类问题。\n\n第一类是任务进入速度过快，例如请求 QPS 或消息处理任务突然增加。\n\n第二类是单任务执行时间变长，例如下游 RPC、数据库访问或本地计算变慢，导致工作线程长期无法释放。\n\n因此不能仅根据线程池打满就判断是“线程数配置太小”。"
-  },
-  {
-    "source": "thread-pool-exhaustion.md",
-    "title": "Java 线程池饱和排查指南",
-    "chunkIndex": 6,
-    "score": 0.4428726796616154,
+    "domain": "thread-pool",
+    "section": "7. 处理原则",
+    "chunkId": "a860345a5c3aeb9902cbb01e628adc1e1057c2351d61e3304a9ded3ed568fed5",
+    "chunkIndex": 7,
+    "score": 0.7293879866722219,
     "text": "# Java 线程池饱和排查指南\n\n## 7. 处理原则\n\n不要看到线程池打满就直接扩大 `maximumPoolSize` 或 `queueCapacity`。\n\n正确顺序是：\n\n```text\n确认线程池饱和\n→ 确认任务为什么变慢或变多\n→ 定位真正瓶颈\n→ 必要时再调整线程池容量\n```\n\n如果真正瓶颈位于数据库或下游 RPC，扩大线程池反而可能进一步增加下游压力。"
   },
   {
-    "source": "mysql-slow-query.md",
-    "title": "MySQL 慢查询排查指南",
-    "chunkIndex": 1,
-    "score": 0.44252366461212583,
-    "text": "# MySQL 慢查询排查指南\n\n## 2. 数据库连接池异常\n\nJava 服务通常使用 HikariCP 等数据库连接池。\n\n常见指标包括：\n\n```text\nactiveConnections\nidleConnections\nmaximumPoolSize\npendingThreads\n```\n\n如果长期出现：\n\n```text\nactiveConnections ≈ maximumPoolSize\npendingThreads > 0\n```\n\n说明新的业务线程已经开始等待数据库连接。\n\n连接池接近满不一定意味着连接池配置太小，也可能是 SQL 执行时间增加导致连接长期无法释放。"
-  },
-  {
-    "source": "mysql-slow-query.md",
-    "title": "MySQL 慢查询排查指南",
-    "chunkIndex": 4,
-    "score": 0.43675373306136545,
-    "text": "# MySQL 慢查询排查指南\n\n## 5. 推荐排查顺序\n\n首先检查：\n\n```text\nDB P95\nDB P99\ntimeout rate\n```\n\n确认数据库延迟是否真的异常。\n\n然后检查：\n\n```text\nactiveConnections\nmaximumPoolSize\npendingThreads\n```\n\n判断连接池是否开始形成瓶颈。\n\n接着定位执行时间最长或调用次数最多的 SQL，并检查执行计划、索引、锁和事务情况。\n\n最后确认数据库异常时间是否与当前业务故障时间一致。"
-  },
-  {
-    "source": "mysql-slow-query.md",
-    "title": "MySQL 慢查询排查指南",
-    "chunkIndex": 2,
-    "score": 0.434231362847253,
-    "text": "# MySQL 慢查询排查指南\n\n## 3. 常见慢查询原因\n\n常见原因包括：\n\n* 缺少合适索引；\n* 执行计划变化；\n* 扫描或返回数据量过大；\n* 锁等待；\n* 长事务；\n* 数据库 CPU、IO 或内存压力。\n\n对于重点慢 SQL，应结合执行计划、扫描行数、返回行数和锁信息进一步验证。\n\n不能仅根据“出现慢 SQL”就直接认定其为整个服务故障的根因。"
-  },
-  {
-    "source": "mysql-slow-query.md",
-    "title": "MySQL 慢查询排查指南",
-    "chunkIndex": 3,
-    "score": 0.4308605363708592,
-    "text": "# MySQL 慢查询排查指南\n\n## 4. 对 Java 服务的影响\n\n数据库响应时间增加会延长业务线程持有数据库连接和等待 SQL 返回的时间。\n\n可能表现为：\n\n```text\nDB P99 升高\n→ 连接占用时间增加\n→ activeConnections 增加\n→ 请求处理时间增加\n```\n\n如果业务线程大量等待数据库，还可能进一步影响 Java 服务整体吞吐，但这一影响需要结合线程池指标单独确认。"
+    "source": "thread-pool-exhaustion.md",
+    "title": "Java 线程池饱和排查指南",
+    "domain": "thread-pool",
+    "section": "1. 线程池饱和是什么",
+    "chunkId": "d534bfed6ffacdcf5d3badcb333a800a21fe3d0e7f0655969b8ed03a90043c8e",
+    "chunkIndex": 0,
+    "score": 0.7273868918793226,
+    "text": "# Java 线程池饱和排查指南\n\n## 1. 线程池饱和是什么\n\nJava 线程池也常称为执行器（Executor）。\n\n“线程池打满”“执行器没有空闲线程”“工作线程全部占用”“activeCount 达到 maximumPoolSize”通常都表示线程池的可用执行能力已经接近或达到上限。\n\n重点观察：\n\n* `threadPoolActive`\n* `threadPoolMax`\n* `queueSize`\n* `queueRemainingCapacity`\n* 单任务执行时间\n\n如果长时间出现：\n\n```text\nthreadPoolActive = threadPoolMax\n```\n\n同时任务队列持续增长，说明没有足够的空闲工作线程处理新增任务。"
   },
   {
     "source": "thread-pool-exhaustion.md",
     "title": "Java 线程池饱和排查指南",
-    "chunkIndex": 5,
-    "score": 0.4282091430363332,
-    "text": "# Java 线程池饱和排查指南\n\n## 6. 判断原则\n\n如果同时观察到：\n\n```text\nthreadPoolActive = threadPoolMax\nTaskRejectedException\nqueueSize 持续增长\n```\n\n可以判断线程池已经处于饱和状态。\n\n但不能仅凭这些信息判断根因一定是数据库、RPC、CPU 或线程池配置不足。\n\n应继续通过对应组件的指标进行验证。"
+    "domain": "thread-pool",
+    "section": "3. 常见原因",
+    "chunkId": "fe642594379bd01453a34dac80c93cbbc31cbbf3cfd25542589d4ecc3933ded1",
+    "chunkIndex": 3,
+    "score": 0.721615862605631,
+    "text": "# Java 线程池饱和排查指南\n\n## 3. 常见原因\n\n线程池饱和通常来自两类问题。\n\n第一类是任务进入速度过快，例如请求 QPS 或消息处理任务突然增加。\n\n第二类是单任务执行时间变长，例如下游 RPC、数据库访问或本地计算变慢，导致工作线程长期无法释放。\n\n因此不能仅根据线程池打满就判断是“线程数配置太小”。"
   }
 ]

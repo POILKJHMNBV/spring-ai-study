@@ -18,8 +18,6 @@
 
 Java 服务通常使用 HikariCP 等数据库连接池。
 
-`activeConnections` 表示已借出的连接数，`idleConnections` 表示空闲连接数，`maximumPoolSize` 是连接池上限，`pendingThreads` 是等待获取连接的线程数。
-
 常见指标包括：
 
 ```text

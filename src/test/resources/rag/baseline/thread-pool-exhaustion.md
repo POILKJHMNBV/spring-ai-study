@@ -24,9 +24,6 @@ threadPoolActive = threadPoolMax
 
 ## 2. 典型异常现象
 
-`RejectedExecutionException` 是执行器拒绝任务的异常；Spring 的 `TaskRejectedException` 也表示提交任务被拒绝。
-常见于工作线程和等待队列容量耗尽，也可能是执行器已关闭，必须同时检查池状态，不能仅凭异常名称断言线程池打满。
-
 线程池真正发生饱和时，常见现象包括：
 
 * active 长时间接近或等于 max；
