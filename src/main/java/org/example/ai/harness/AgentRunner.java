@@ -1,6 +1,8 @@
 package org.example.ai.harness;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.ai.rag.KnowledgeRetriever;
+import org.example.ai.rag.RetrievedChunk;
 import org.example.ai.tool.OpsTools;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
@@ -39,12 +41,15 @@ public class AgentRunner {
     private final OpsTools opsTools;
     private final ChatModel chatModel;
     private final ExecutionPolicy executionPolicy;
+    private final KnowledgeRetriever knowledgeRetriever;
     private final ExecutorService toolExecutor;
-    public AgentRunner(ToolCallingManager toolCallingManager, OpsTools opsTools, ChatModel chatModel, ExecutionPolicy executionPolicy) {
+    public AgentRunner(ToolCallingManager toolCallingManager, OpsTools opsTools, ChatModel chatModel,
+                       ExecutionPolicy executionPolicy, KnowledgeRetriever knowledgeRetriever) {
         this.toolCallingManager = toolCallingManager;
         this.opsTools = opsTools;
         this.chatModel = chatModel;
         this.executionPolicy = executionPolicy;
+        this.knowledgeRetriever = knowledgeRetriever;
         toolExecutor = Executors.newFixedThreadPool(3);
     }
 
@@ -87,9 +92,16 @@ public class AgentRunner {
                 .toolCallbacks(guardedCallbacks)
                 .build();
 
+        // RAG
+        List<RetrievedChunk> retrievedChunks = knowledgeRetriever.retrieve(userPrompt);
+        for (int i = 0, n = retrievedChunks.size(); i < n; i++) {
+            trace.recordRag(i + 1, retrievedChunks.get(i));
+        }
+        String knowledgeContext = buildKnowledgeContext(retrievedChunks);
+
         List<Message> messages = List.of(
                 new SystemMessage(SYSTEM_PROMPT),
-                new UserMessage(userPrompt)
+                new UserMessage(buildAugmentedUserMessage(userPrompt, knowledgeContext))
         );
 
         Prompt prompt = new Prompt(messages, options);
@@ -281,5 +293,52 @@ public class AgentRunner {
                 MAX_STEPS,
                 trace.snapshot()
         );
+    }
+
+    private String buildAugmentedUserMessage(String userPrompt, String knowledgeContext) {
+        return """
+        用户问题：
+
+        %s
+
+        以下是从团队故障知识库检索得到的参考资料。
+        这些内容只作为知识依据，不代表当前环境已经发生对应故障。
+
+        <knowledge>
+        %s
+        </knowledge>
+        """.formatted(
+                userPrompt,
+                knowledgeContext
+        );
+    }
+
+    private String buildKnowledgeContext(List<RetrievedChunk> chunks) {
+
+        if (chunks.isEmpty()) {
+            return """
+                未检索到与当前问题相关的团队知识条目。
+                """;
+        }
+
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < chunks.size(); i++) {
+            RetrievedChunk chunk = chunks.get(i);
+            builder.append("""
+                [KB-%d]
+                source: %s
+                title: %s
+                content:
+                %s
+
+                """.formatted(
+                    i + 1,
+                    chunk.source(),
+                    chunk.title(),
+                    chunk.text()
+            ));
+        }
+
+        return builder.toString();
     }
 }

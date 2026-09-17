@@ -1,6 +1,7 @@
 package org.example.ai.harness;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.ai.rag.RetrievedChunk;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -19,7 +20,8 @@ public class TraceRecorder {
         TOOL,
         CONTEXT,
         POLICY,
-        STOP
+        STOP,
+        RAG
     }
 
     public record TraceEvent(
@@ -34,6 +36,29 @@ public class TraceRecorder {
             Integer totalTokens,
             String status
     ) {
+    }
+
+    public void recordRag(int rank, RetrievedChunk chunk) {
+        add(new TraceEvent(
+                0,
+                EventType.RAG,
+                chunk.source(),
+                "rank=" + rank,
+                """
+                chunkIndex=%d
+                score=%s
+                content=%s
+                """.formatted(
+                        chunk.chunkIndex(),
+                        chunk.score(),
+                        truncate(chunk.text())
+                ),
+                0,
+                null,
+                null,
+                null,
+                "HIT"
+        ));
     }
 
     public void recordModel(
