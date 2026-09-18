@@ -1,6 +1,7 @@
 package org.example.ai.harness;
 
 import jakarta.annotation.Nullable;
+import org.example.ai.security.ConversationSecurity;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.ToolCallback;
@@ -8,6 +9,7 @@ import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.metadata.ToolMetadata;
 
 import java.time.Duration;
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.function.IntSupplier;
 
@@ -16,6 +18,15 @@ import java.util.function.IntSupplier;
  */
 @NullMarked
 public class GuardedToolCallback implements ToolCallback {
+    /**
+     * 单次 Tool Result 最多允许进入模型 Context 的字符数。
+     *
+     * <p>
+     * 防止日志查询等 Tool 一次返回超大文本，
+     * 挤占 Context Window。
+     * </p>
+     */
+    private static final int MAX_TOOL_RESULT_CHARS = 8_000;
 
     /**
      * 代理 ToolCallback
@@ -103,9 +114,17 @@ public class GuardedToolCallback implements ToolCallback {
 
             try {
 
-                String result = future.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
+                String rawResult = future.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
 
                 long elapsedMs = elapsedMs(start);
+
+                /*
+                 * Tool 返回的数据可能包含敏感日志，
+                 * 进入模型 Context 前先做基础脱敏。
+                 */
+                String sanitizedResult = ConversationSecurity.sanitizeSensitiveText(rawResult);
+
+                String result = truncateToolResult(sanitizedResult);
 
                 trace.recordTool(
                         stepSupplier.getAsInt(),
@@ -203,6 +222,38 @@ public class GuardedToolCallback implements ToolCallback {
     private long elapsedMs(long start) {
         return TimeUnit.NANOSECONDS.toMillis(
                 System.nanoTime() - start
+        );
+    }
+
+    /**
+     * 限制 Tool Result 的最大长度。
+     *
+     * @param result Tool 原始结果
+     * @return 可安全放入模型 Context 的结果
+     */
+    private String truncateToolResult(String result) {
+        if (result.length() <= MAX_TOOL_RESULT_CHARS) {
+            return result;
+        }
+
+        String preview =
+                result.substring(0, MAX_TOOL_RESULT_CHARS);
+
+        /*
+         * 明确告诉模型：当前结果不是完整数据。
+         * 禁止模型把截断内容误认为完整结果。
+         */
+        return """
+            [TOOL_RESULT_TRUNCATED]
+            originalChars=%d
+            returnedChars=%d
+            nextPage=UNAVAILABLE
+            preview:
+            %s
+            """.formatted(
+                result.length(),
+                preview.length(),
+                preview
         );
     }
 }

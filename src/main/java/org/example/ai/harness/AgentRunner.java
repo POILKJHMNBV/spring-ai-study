@@ -3,7 +3,9 @@ package org.example.ai.harness;
 import lombok.extern.slf4j.Slf4j;
 import org.example.ai.rag.KnowledgeRetriever;
 import org.example.ai.rag.RetrievedChunk;
+import org.example.ai.security.ConversationSecurity;
 import org.example.ai.tool.OpsTools;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -42,18 +45,37 @@ public class AgentRunner {
     private final ChatModel chatModel;
     private final ExecutionPolicy executionPolicy;
     private final KnowledgeRetriever knowledgeRetriever;
+    private final ChatMemory chatMemory;
     private final ExecutorService toolExecutor;
     public AgentRunner(ToolCallingManager toolCallingManager, OpsTools opsTools, ChatModel chatModel,
-                       ExecutionPolicy executionPolicy, KnowledgeRetriever knowledgeRetriever) {
+                       ExecutionPolicy executionPolicy, KnowledgeRetriever knowledgeRetriever, ChatMemory chatMemory) {
         this.toolCallingManager = toolCallingManager;
         this.opsTools = opsTools;
         this.chatModel = chatModel;
         this.executionPolicy = executionPolicy;
         this.knowledgeRetriever = knowledgeRetriever;
+        this.chatMemory = chatMemory;
         toolExecutor = Executors.newFixedThreadPool(3);
     }
 
-    public AgentRunResult run(String userPrompt, String chatId) {
+    /**
+     * 默认启用 Memory 的 Agent 调用。
+     */
+    public AgentRunResult run(String userPrompt, String conversationId) {
+        return run(userPrompt, conversationId, true);
+    }
+
+    /**
+     * 执行一次 Agent。
+     *
+     * @param userPrompt     当前用户问题
+     * @param conversationId 当前会话 ID
+     * @param memoryEnabled  是否启用跨轮 Memory；
+     *                       Day5 对照实验时可关闭
+     */
+    public AgentRunResult run(String userPrompt, String conversationId, boolean memoryEnabled) {
+        String safeConversationId = ConversationSecurity.requireValidConversationId(conversationId);
+
         TraceRecorder trace = new TraceRecorder();
 
         ExecutionPolicy.RunState policyState = executionPolicy.newRunState();
@@ -99,10 +121,13 @@ public class AgentRunner {
         }
         String knowledgeContext = buildKnowledgeContext(retrievedChunks);
 
-        List<Message> messages = List.of(
-                new SystemMessage(SYSTEM_PROMPT),
-                new UserMessage(buildAugmentedUserMessage(userPrompt, knowledgeContext))
-        );
+        List<Message> messages = new ArrayList<>();
+        messages.add(new SystemMessage(SYSTEM_PROMPT));
+        if (memoryEnabled) {
+            // 处理当前用户问题之前加载会话历史
+            messages.addAll(chatMemory.get(safeConversationId));
+        }
+        messages.add(new UserMessage(buildAugmentedUserMessage(userPrompt, knowledgeContext)));
 
         Prompt prompt = new Prompt(messages, options);
         int contextMessageCount = messages.size();
@@ -169,6 +194,20 @@ public class AgentRunner {
                         step,
                         "No more tool calls"
                 );
+
+                /*
+                 * 只有 Agent 正常形成最终回答以后，
+                 * 才把“原始用户问题 + 最终回答”写入 Memory。
+                 *
+                 * 中间 Tool Call / Tool Result 不保存。
+                 */
+                if (memoryEnabled) {
+                    saveMemoryTurn(
+                            safeConversationId,
+                            userPrompt,
+                            answer
+                    );
+                }
 
                 return new AgentRunResult(
                         AgentRunResult.RunStatus.COMPLETED,
@@ -340,5 +379,30 @@ public class AgentRunner {
         }
 
         return builder.toString();
+    }
+
+    /**
+     * 将一次成功完成的对话保存到跨轮 Memory。
+     *
+     * <p>
+     * 只保存：
+     * - 用户真正输入的问题；
+     * - Agent 最终回答。
+     * 不保存：
+     * - RAG Chunk；
+     * - Tool Call；
+     * - Tool Result；
+     * - 中间模型推理消息。
+     * </p>
+     */
+    private void saveMemoryTurn(String conversationId, String userPrompt, String answer) {
+        String safeUserPrompt = ConversationSecurity.sanitizeSensitiveText(userPrompt);
+        String safeAnswer = ConversationSecurity.sanitizeSensitiveText(answer);
+        chatMemory.add(conversationId, new UserMessage(safeUserPrompt));
+        chatMemory.add(conversationId, new AssistantMessage(safeAnswer));
+    }
+
+    public void clearMemory(String conversationId) {
+        chatMemory.clear(conversationId);
     }
 }

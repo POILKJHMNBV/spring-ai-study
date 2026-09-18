@@ -1,6 +1,7 @@
 package org.example.ai.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.ai.security.ConversationSecurity;
 import org.example.ai.tool.OpsTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -22,12 +23,20 @@ public class ChatService {
         this.opsTools = opsTools;
     }
 
-    public String chat(String userPrompt, String chatId) {
+    public String chat(String userPrompt, String conversationId) {
+        String safeConversationId = ConversationSecurity.requireValidConversationId(conversationId);
+
+        /*
+         * 对用户输入中的显式 Token/API Key 做基础脱敏。
+         * 一方面避免发送给模型，另一方面避免随后被 Memory Advisor 保存。
+         */
+        String safePrompt = ConversationSecurity.sanitizeSensitiveText(userPrompt);
+
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
-        ChatResponse chatResponse = chatClient.prompt(userPrompt)
+        ChatResponse chatResponse = chatClient.prompt(safePrompt)
                 .tools(opsTools)
-                .advisors(advisorSpec -> advisorSpec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .advisors(advisorSpec -> advisorSpec.param(ChatMemory.CONVERSATION_ID, safeConversationId))
                 .call()
                 .chatResponse();
         stopWatch.stop();
@@ -63,7 +72,7 @@ public class ChatService {
         return content;
     }
 
-    public Flux<String> streamChat(String userPrompt, String chatId) {
+    public Flux<String> streamChat(String userPrompt, String conversationId) {
         return null;
     }
 }

@@ -10,6 +10,16 @@ import java.util.Set;
 
 @Component
 public class ExecutionPolicy {
+    /**
+     * 单次 Agent 请求允许的最大 Tool Call 数量。
+     *
+     * <p>
+     * MAX_STEPS 限制模型循环次数；
+     * MAX_TOOL_CALLS_PER_RUN 限制一次响应同时申请多个 Tool 时的总量。
+     * 两个限制解决的问题不同。
+     * </p>
+     */
+    private static final int MAX_TOOL_CALLS_PER_RUN = 8;
     private static final Set<String> ALLOWED_TOOLS = Set.of(
             "getKafkaStatus",
             "getServiceStatus",
@@ -34,6 +44,22 @@ public class ExecutionPolicy {
             List<AssistantMessage.ToolCall> toolCalls,
             RunState state
     ) {
+
+        /*
+         * 一个模型响应可能一次产生多个 Tool Call，
+         * 因此不能只依赖 Agent 的 step 数量。
+         */
+        int nextTotalToolCalls =
+                state.totalToolCalls + toolCalls.size();
+
+        if (nextTotalToolCalls > MAX_TOOL_CALLS_PER_RUN) {
+            throw new IllegalStateException(
+                    "单次 Agent 请求的 Tool 调用数量超过限制: "
+                            + MAX_TOOL_CALLS_PER_RUN
+            );
+        }
+
+        state.totalToolCalls = nextTotalToolCalls;
 
         for (AssistantMessage.ToolCall call : toolCalls) {
 
@@ -107,8 +133,15 @@ public class ExecutionPolicy {
     }
 
     public static final class RunState {
-
+        /**
+         * 上一次 Tool 调用签名，
+         * 用于检测连续完全相同的 Tool 调用。
+         */
         private String lastToolSignature;
+        /**
+         * 当前 Agent 请求累计申请的 Tool Call 数量。
+         */
+        private int totalToolCalls;
     }
 
     public static class PolicyViolationException
