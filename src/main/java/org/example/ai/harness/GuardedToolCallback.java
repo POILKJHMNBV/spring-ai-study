@@ -103,14 +103,9 @@ public class GuardedToolCallback implements ToolCallback {
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
             long start = System.nanoTime();
             Future<String> future =
-                    executor.submit(() -> {
-
-                        if (toolContext == null) {
-                            return delegate.call(toolInput);
-                        }
-
-                        return delegate.call(toolInput, toolContext);
-                    });
+                    executor.submit(() -> toolContext == null ?
+                            delegate.call(toolInput) :
+                            delegate.call(toolInput, toolContext));
 
             try {
 
@@ -184,15 +179,10 @@ public class GuardedToolCallback implements ToolCallback {
 
                 Thread.currentThread().interrupt();
 
-                throw new IllegalStateException(
-                        "Tool execution interrupted: "
-                                + toolName,
-                        e
-                );
+                throw new IllegalStateException("Tool execution interrupted: " + toolName, e);
             } catch (ExecutionException e) {
 
-                long elapsedMs =
-                        elapsedMs(start);
+                long elapsedMs = elapsedMs(start);
 
                 trace.recordTool(
                         stepSupplier.getAsInt(),
@@ -206,23 +196,15 @@ public class GuardedToolCallback implements ToolCallback {
                         "FAILED"
                 );
 
-                throw new IllegalStateException(
-                        "Tool execution failed: "
-                                + toolName,
-                        e.getCause()
-                );
+                throw new IllegalStateException("Tool execution failed: " + toolName, e.getCause());
             }
         }
 
-        throw new IllegalStateException(
-                "Unexpected tool execution state"
-        );
+        throw new IllegalStateException("Unexpected tool execution state");
     }
 
     private long elapsedMs(long start) {
-        return TimeUnit.NANOSECONDS.toMillis(
-                System.nanoTime() - start
-        );
+        return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
     }
 
     /**
@@ -236,8 +218,7 @@ public class GuardedToolCallback implements ToolCallback {
             return result;
         }
 
-        String preview =
-                result.substring(0, MAX_TOOL_RESULT_CHARS);
+        String preview = result.substring(0, MAX_TOOL_RESULT_CHARS);
 
         /*
          * 明确告诉模型：当前结果不是完整数据。

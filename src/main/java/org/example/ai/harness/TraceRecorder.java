@@ -10,6 +10,9 @@ import org.springframework.util.Assert;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * 日志记录
+ */
 @Slf4j
 public class TraceRecorder {
 
@@ -72,20 +75,14 @@ public class TraceRecorder {
         Assert.notNull(response.getResult(), "response.result must not be null");
 
         Usage usage = response.getMetadata().getUsage();
-
         AssistantMessage output = response.getResult().getOutput();
-
         String resultSummary;
-
         if (output.hasToolCalls()) {
-
             resultSummary = output.getToolCalls()
                     .stream()
-                    .map(call ->
-                            call.name() + "(" + call.arguments() + ")")
+                    .map(call -> call.name() + "(" + call.arguments() + ")")
                     .toList()
                     .toString();
-
         }
         else {
             resultSummary = truncate(output.getText());

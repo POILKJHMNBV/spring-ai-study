@@ -101,9 +101,7 @@ public class AgentRunner {
                         .toArray(ToolCallback[]::new);
 
         // 获取 Spring Boot 已经配置好的 Ollama Options
-        if (!(chatModel.getOptions()
-                instanceof OllamaChatOptions baseOptions)) {
-
+        if (!(chatModel.getOptions() instanceof OllamaChatOptions baseOptions)) {
             throw new IllegalStateException(
                     "Expected OllamaChatOptions"
             );
@@ -147,12 +145,7 @@ public class AgentRunner {
                 stopWatch.start();
                 response = chatModel.call(prompt);
             } catch (Exception e) {
-                trace.recordStop(
-                        step,
-                        "LLM call failed: "
-                                + e.getMessage()
-                );
-
+                trace.recordStop(step, "LLM call failed: " + e.getMessage());
                 return new AgentRunResult(
                         AgentRunResult.RunStatus.FAILED,
                         "模型调用失败：" + e.getMessage(),
@@ -165,10 +158,7 @@ public class AgentRunner {
             Generation responseResult = response.getResult();
             if (Objects.isNull(responseResult)) {
                 log.error("Chat response is null");
-                trace.recordStop(
-                        step,
-                        "LLM returned empty response"
-                );
+                trace.recordStop(step, "LLM returned empty response");
 
                 return new AgentRunResult(
                         AgentRunResult.RunStatus.FAILED,
@@ -179,21 +169,13 @@ public class AgentRunner {
             }
 
             // B. 记录本轮 LLM Trace
-            trace.recordModel(
-                    step,
-                    contextMessageCount,
-                    response,
-                    stopWatch.getTotalTimeMillis()
-            );
+            trace.recordModel(step, contextMessageCount, response, stopWatch.getTotalTimeMillis());
 
             // C.模型不再请求 Tool，循环结束
             if (!response.hasToolCalls()) {
                 log.info("No tool calls, returning response, step = {}", step);
                 String answer = responseResult.getOutput().getText();
-                trace.recordStop(
-                        step,
-                        "No more tool calls"
-                );
+                trace.recordStop(step, "No more tool calls");
 
                 /*
                  * 只有 Agent 正常形成最终回答以后，
@@ -202,19 +184,10 @@ public class AgentRunner {
                  * 中间 Tool Call / Tool Result 不保存。
                  */
                 if (memoryEnabled) {
-                    saveMemoryTurn(
-                            safeConversationId,
-                            userPrompt,
-                            answer
-                    );
+                    saveMemoryTurn(safeConversationId, userPrompt, answer);
                 }
 
-                return new AgentRunResult(
-                        AgentRunResult.RunStatus.COMPLETED,
-                        answer,
-                        step,
-                        trace.snapshot()
-                );
+                return new AgentRunResult(AgentRunResult.RunStatus.COMPLETED, answer, step, trace.snapshot());
             }
 
             List<AssistantMessage.ToolCall> toolCalls = responseResult
@@ -223,27 +196,10 @@ public class AgentRunner {
 
             // D. ExecutionPolicy
             try {
-
-                executionPolicy.check(
-                        toolCalls,
-                        policyState
-                );
-
-            }
-            catch (
-                    ExecutionPolicy.PolicyViolationException e
-            ) {
-
-                trace.recordPolicyReject(
-                        step,
-                        e.getMessage()
-                );
-
-                trace.recordStop(
-                        step,
-                        "Execution policy rejected tool call"
-                );
-
+                executionPolicy.check(toolCalls, policyState);
+            } catch (ExecutionPolicy.PolicyViolationException e) {
+                trace.recordPolicyReject(step, e.getMessage());
+                trace.recordStop(step, "Execution policy rejected tool call");
                 return new AgentRunResult(
                         AgentRunResult.RunStatus.POLICY_REJECTED,
                         "工具调用被安全策略拒绝："
@@ -253,33 +209,14 @@ public class AgentRunner {
                 );
             }
 
-            /*
-             * E. 真正执行 Tool
-             *
-             * ToolCallingManager 会找到对应
-             * GuardedToolCallback。
-             *
-             * GuardedToolCallback 内部再调用真正的 OpsTools。
-             */
+            // E. 真正执行 Tool，ToolCallingManager 会找到对应GuardedToolCallback。GuardedToolCallback 内部再调用真正的 OpsTools。
             ToolExecutionResult toolResult;
 
             try {
-
-                toolResult =
-                        toolCallingManager.executeToolCalls(
-                                prompt,
-                                response
-                        );
-
+                toolResult = toolCallingManager.executeToolCalls(prompt, response);
             }
             catch (RuntimeException e) {
-
-                trace.recordStop(
-                        step,
-                        "Tool execution failed: "
-                                + e.getMessage()
-                );
-
+                trace.recordStop(step, "Tool execution failed: " + e.getMessage());
                 return new AgentRunResult(
                         AgentRunResult.RunStatus.FAILED,
                         "工具执行失败："
@@ -289,41 +226,21 @@ public class AgentRunner {
                 );
             }
 
-            /*
-             * F. Observation → Context
-             */
-            int newContextMessageCount =
-                    toolResult
-                            .conversationHistory()
-                            .size();
+            // F. Observation → Context
+            int newContextMessageCount = toolResult.conversationHistory().size();
+            trace.recordContext(step, contextMessageCount, newContextMessageCount);
 
-            trace.recordContext(
-                    step,
-                    contextMessageCount,
-                    newContextMessageCount
-            );
+            contextMessageCount = newContextMessageCount;
 
-            contextMessageCount =
-                    newContextMessageCount;
 
-            /*
-             * G. 使用新的 Context
-             *    开始下一轮 LLM Call
-             */
-            prompt =
-                    new Prompt(
-                            toolResult.conversationHistory(),
-                            options
-                    );
+            // G. 使用新的 Context，开始下一轮 LLM Call
+            prompt = new Prompt(toolResult.conversationHistory(), options);
         }
 
         /*
          * 达到 MAX_STEPS
          */
-        trace.recordStop(
-                MAX_STEPS,
-                "Maximum agent steps exceeded"
-        );
+        trace.recordStop(MAX_STEPS, "Maximum agent steps exceeded");
 
         return new AgentRunResult(
                 AgentRunResult.RunStatus.STEP_LIMIT_EXCEEDED,

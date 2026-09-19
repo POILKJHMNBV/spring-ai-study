@@ -491,10 +491,10 @@ flowchart TD
 
 ### 验收
 
-- [ ] 同一 conversationId 能理解指代；
-- [ ] 换一个 conversationId 后不会继承前一会话；
-- [ ] Memory 不会保存 API Key 或原始敏感日志；
-- [ ] 关闭 Memory 后，对照实验能明显看出差异。
+- [x] 同一 conversationId 能理解指代；
+- [x] 换一个 conversationId 后不会继承前一会话；
+- [x] Memory 不会保存 API Key 或原始敏感日志；
+- [x] 关闭 Memory 后，对照实验能明显看出差异。
 
 ---
 
@@ -541,9 +541,9 @@ flowchart TD
 
 ### 验收
 
-- [ ] 评测输入和 Mock 场景固定可复现；
-- [ ] 输出保存结构化结果，不只保存自然语言；
-- [ ] 每次 Prompt、Tool 描述或模型变更都能比较前后结果。
+- [x] 评测输入和 Mock 场景固定可复现；
+- [x] 输出保存结构化结果，不只保存自然语言；
+- [x] 每次 Prompt、Tool 描述或模型变更都能比较前后结果。
 
 ---
 

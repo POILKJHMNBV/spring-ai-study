@@ -4,6 +4,8 @@ import org.example.ai.harness.AgentRunResult;
 import org.example.ai.harness.AgentRunner;
 import org.example.ai.security.ConversationSecurity;
 import org.example.ai.service.ChatService;
+import org.example.ai.tool.mock.MockScenario;
+import org.example.ai.tool.mock.OpsMockDataProvider;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
@@ -13,10 +15,12 @@ public class ChatController {
 
     private final ChatService chatService; // Constructor injection
     private final AgentRunner agentRunner;
+    private final OpsMockDataProvider opsMockDataProvider;
 
-    public ChatController(ChatService chatService, AgentRunner agentRunner) {
+    public ChatController(ChatService chatService, AgentRunner agentRunner, OpsMockDataProvider opsMockDataProvider) {
         this.chatService = chatService;
         this.agentRunner = agentRunner;
+        this.opsMockDataProvider = opsMockDataProvider;
     }
 
     @GetMapping("/chat")
@@ -28,6 +32,16 @@ public class ChatController {
     public String agent(String userPrompt,
                         String conversationId,
                         @RequestParam(defaultValue = "true") boolean memoryEnabled) {
+        AgentRunResult result = agentRunner.run(userPrompt, conversationId, memoryEnabled);
+        return result.answer();
+    }
+
+    @GetMapping("/eval")
+    public String eval(String userPrompt,
+                       String conversationId,
+                       MockScenario mockScenario,
+                       @RequestParam(defaultValue = "false") boolean memoryEnabled) {
+        opsMockDataProvider.useScenario(mockScenario);
         AgentRunResult result = agentRunner.run(userPrompt, conversationId, memoryEnabled);
         return result.answer();
     }

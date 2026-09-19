@@ -20,16 +20,26 @@ public class ExecutionPolicy {
      * </p>
      */
     private static final int MAX_TOOL_CALLS_PER_RUN = 8;
+
+    /**
+     * 允许调用的tool列表
+     */
     private static final Set<String> ALLOWED_TOOLS = Set.of(
             "getKafkaStatus",
             "getServiceStatus",
             "queryErrorLogs"
     );
 
+    /**
+     * 允许调用的service列表
+     */
     private static final Set<String> ALLOWED_SERVICES = Set.of(
             "payment-service"
     );
 
+    /**
+     * 允许查询的topic列表
+     */
     private static final Set<String> ALLOWED_TOPICS = Set.of(
             "order-topic"
     );
@@ -40,23 +50,16 @@ public class ExecutionPolicy {
         return new RunState();
     }
 
-    public void check(
-            List<AssistantMessage.ToolCall> toolCalls,
-            RunState state
-    ) {
+    public void check(List<AssistantMessage.ToolCall> toolCalls, RunState state) {
 
         /*
          * 一个模型响应可能一次产生多个 Tool Call，
          * 因此不能只依赖 Agent 的 step 数量。
          */
-        int nextTotalToolCalls =
-                state.totalToolCalls + toolCalls.size();
+        int nextTotalToolCalls = state.totalToolCalls + toolCalls.size();
 
         if (nextTotalToolCalls > MAX_TOOL_CALLS_PER_RUN) {
-            throw new IllegalStateException(
-                    "单次 Agent 请求的 Tool 调用数量超过限制: "
-                            + MAX_TOOL_CALLS_PER_RUN
-            );
+            throw new IllegalStateException("单次 Agent 请求的 Tool 调用数量超过限制: " + MAX_TOOL_CALLS_PER_RUN);
         }
 
         state.totalToolCalls = nextTotalToolCalls;
@@ -67,52 +70,39 @@ public class ExecutionPolicy {
 
             // 1. Tool 白名单
             if (!ALLOWED_TOOLS.contains(toolName)) {
-                throw new PolicyViolationException(
-                        "Tool not allowed: " + toolName
-                );
+                throw new PolicyViolationException("Tool not allowed: " + toolName);
             }
 
             JsonNode arguments = parseArguments(call.arguments());
 
             // 2. 参数权限
             switch (toolName) {
-
                 case "getKafkaStatus" -> {
 
                     String topic = arguments.path("topic").asString();
 
                     if (!ALLOWED_TOPICS.contains(topic)) {
-                        throw new PolicyViolationException(
-                                "Topic not allowed: " + topic
-                        );
+                        throw new PolicyViolationException("Topic not allowed: " + topic);
                     }
                 }
 
-                case "getServiceStatus",
-                        "queryErrorLogs" -> {
+                case "getServiceStatus", "queryErrorLogs" -> {
 
-                    String serviceName =
-                            arguments.path("serviceName").asString();
+                    String serviceName = arguments.path("serviceName").asString();
 
                     if (!ALLOWED_SERVICES.contains(serviceName)) {
-                        throw new PolicyViolationException(
-                                "Service not allowed: " + serviceName
-                        );
+                        throw new PolicyViolationException("Service not allowed: " + serviceName);
                     }
                 }
 
-                default -> throw new PolicyViolationException(
-                        "Unexpected tool: " + toolName
-                );
+                default -> throw new PolicyViolationException("Unexpected tool: " + toolName);
             }
 
             // 3. 连续重复调用检测
             String signature = toolName + ":" + arguments;
 
             if (signature.equals(state.lastToolSignature)) {
-                throw new PolicyViolationException(
-                        "Repeated tool call detected: " + signature
-                );
+                throw new PolicyViolationException("Repeated tool call detected: " + signature);
             }
 
             state.lastToolSignature = signature;
@@ -125,10 +115,7 @@ public class ExecutionPolicy {
             return objectMapper.readTree(arguments);
         }
         catch (Exception e) {
-            throw new PolicyViolationException(
-                    "Invalid tool arguments: " + arguments,
-                    e
-            );
+            throw new PolicyViolationException("Invalid tool arguments: " + arguments, e);
         }
     }
 
@@ -144,17 +131,13 @@ public class ExecutionPolicy {
         private int totalToolCalls;
     }
 
-    public static class PolicyViolationException
-            extends RuntimeException {
+    public static class PolicyViolationException extends RuntimeException {
 
         public PolicyViolationException(String message) {
             super(message);
         }
 
-        public PolicyViolationException(
-                String message,
-                Throwable cause
-        ) {
+        public PolicyViolationException(String message, Throwable cause) {
             super(message, cause);
         }
     }

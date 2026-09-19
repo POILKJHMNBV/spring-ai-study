@@ -4,15 +4,29 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.ai.tool.dto.ErrorLog;
 import org.example.ai.tool.dto.KafkaStatus;
 import org.example.ai.tool.dto.ServiceStatus;
+import org.example.ai.tool.mock.OpsMockDataProvider;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * Agent 可调用的三个只读运维 Tool。
+ *
+ * <p>
+ * Tool 定义保持稳定，具体 Mock 数据交给 OpsMockDataProvider。
+ * 这样 Day6 可以切换场景，而不会污染 Tool Calling 本身。
+ * </p>
+ */
 @Slf4j
 @Component
 public class OpsTools {
+    private final OpsMockDataProvider dataProvider;
+    public OpsTools(OpsMockDataProvider dataProvider) {
+        this.dataProvider = dataProvider;
+    }
+
     @Tool(
             description = """
                     查询指定 Java 服务当前的运行状态，
@@ -27,14 +41,7 @@ public class OpsTools {
 
         log.info("Tool called: getServiceStatus(serviceName={})", serviceName);
 
-        return new ServiceStatus(
-                serviceName,
-                96.0,
-                78.5,
-                200,
-                200,
-                true
-        );
+        return dataProvider.getServiceStatus(serviceName);
     }
 
     @Tool(
@@ -51,13 +58,7 @@ public class OpsTools {
 
         log.info("Tool called: getKafkaStatus(topic={})", topic);
 
-        return new KafkaStatus(
-                topic,
-                125_000,
-                5_000,
-                2_800,
-                3
-        );
+        return dataProvider.getKafkaStatus(topic);
     }
 
     @Tool(
@@ -79,15 +80,6 @@ public class OpsTools {
                 minutes
         );
 
-        return List.of(
-                new ErrorLog(
-                        "ERROR",
-                        "TaskRejectedException: executor queue is full"
-                ),
-                new ErrorLog(
-                        "WARN",
-                        "downstream timeout rate=18%"
-                )
-        );
+        return dataProvider.queryErrorLogs(serviceName, minutes);
     }
 }
