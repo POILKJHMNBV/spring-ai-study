@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.ai.rag.KnowledgeRetriever;
 import org.example.ai.rag.RetrievedChunk;
 import org.example.ai.security.ConversationSecurity;
+import org.example.ai.tool.AgentToolProvider;
+import org.example.ai.tool.KafkaToolMode;
 import org.example.ai.tool.OpsTools;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -41,16 +43,16 @@ public class AgentRunner {
     private static final Duration TOOL_TIMEOUT = Duration.ofSeconds(3);
     private static final int TOOL_MAX_RETRIES = 1;
     private final ToolCallingManager toolCallingManager;
-    private final OpsTools opsTools;
+    private final AgentToolProvider agentToolProvider;
     private final ChatModel chatModel;
     private final ExecutionPolicy executionPolicy;
     private final KnowledgeRetriever knowledgeRetriever;
     private final ChatMemory chatMemory;
     private final ExecutorService toolExecutor;
-    public AgentRunner(ToolCallingManager toolCallingManager, OpsTools opsTools, ChatModel chatModel,
+    public AgentRunner(ToolCallingManager toolCallingManager, AgentToolProvider agentToolProvider, ChatModel chatModel,
                        ExecutionPolicy executionPolicy, KnowledgeRetriever knowledgeRetriever, ChatMemory chatMemory) {
         this.toolCallingManager = toolCallingManager;
-        this.opsTools = opsTools;
+        this.agentToolProvider = agentToolProvider;
         this.chatModel = chatModel;
         this.executionPolicy = executionPolicy;
         this.knowledgeRetriever = knowledgeRetriever;
@@ -65,6 +67,10 @@ public class AgentRunner {
         return run(userPrompt, conversationId, true);
     }
 
+    public AgentRunResult run(String userPrompt, String conversationId, boolean memoryEnabled) {
+        return run(userPrompt, conversationId, memoryEnabled, KafkaToolMode.LOCAL);
+    }
+
     /**
      * 执行一次 Agent。
      *
@@ -73,7 +79,7 @@ public class AgentRunner {
      * @param memoryEnabled  是否启用跨轮 Memory；
      *                       Day5 对照实验时可关闭
      */
-    public AgentRunResult run(String userPrompt, String conversationId, boolean memoryEnabled) {
+    public AgentRunResult run(String userPrompt, String conversationId, boolean memoryEnabled, KafkaToolMode kafkaToolMode) {
         String safeConversationId = ConversationSecurity.requireValidConversationId(conversationId);
 
         TraceRecorder trace = new TraceRecorder();
@@ -82,8 +88,38 @@ public class AgentRunner {
 
         AtomicInteger currentStep = new AtomicInteger(0);
 
-        // 将 @Tool 方法转换成 ToolCallback
-        ToolCallback[] toolCallbacks = ToolCallbacks.from(opsTools);
+        /*
+         * Day7：
+         * Tool 来源不再写死为 OpsTools。
+         *
+         * LOCAL：
+         * 三个 Tool 全部来自本地。
+         *
+         * MCP：
+         * getKafkaStatus 来自远程 MCP Server。
+         */
+        ToolCallback[] toolCallbacks;
+
+        try {
+            toolCallbacks = agentToolProvider.getToolCallbacks(kafkaToolMode);
+        }
+        catch (RuntimeException e) {
+
+            /*
+             * MCP Tool discovery 失败也必须形成
+             * Harness 可观察的受控结果，
+             * 而不是直接向 Controller 抛 500。
+             */
+            trace.recordStop(0, "Tool discovery failed: " + e.getMessage());
+
+            return new AgentRunResult(
+                    AgentRunResult.RunStatus.FAILED,
+                    "工具发现失败："
+                            + e.getMessage(),
+                    0,
+                    trace.snapshot()
+            );
+        }
 
         // 在 Tool 外面增加：timeout + retry + trace
         ToolCallback[] guardedCallbacks =
@@ -250,6 +286,8 @@ public class AgentRunner {
                 trace.snapshot()
         );
     }
+
+
 
     private String buildAugmentedUserMessage(String userPrompt, String knowledgeContext) {
         return """

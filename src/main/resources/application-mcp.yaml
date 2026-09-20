@@ -1,0 +1,31 @@
+spring:
+  ai:
+    mcp:
+      client:
+        # MCP Profile 下启用 Client。
+        enabled: true
+
+        # 当前使用阻塞式 ChatModel / Agent Loop，
+        # 因此选择同步 MCP Client。
+        type: SYNC
+
+        name: spring-ai-study-agent
+        version: 1.0.0
+
+        # MCP Client 自己的请求超时。
+        #
+        # Harness 外层 GuardedToolCallback 仍保留 3 秒限制，
+        # 这里设置 2 秒，让网络层优先产生明确失败。
+        request-timeout: 2s
+
+        streamable-http:
+          connections:
+            kafka-server:
+              url: http://127.0.0.1:8091
+
+              # Spring AI Streamable HTTP 默认就是 /mcp，
+              # 这里显式写出，便于学习。
+              endpoint: /mcp
+
+app:
+  kafka-tool-mode: MCP

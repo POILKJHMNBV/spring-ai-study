@@ -1,6 +1,8 @@
 spring:
   application:
     name: spring-ai-study
+  profiles:
+    active: mcp
   ai:
     ollama:
       chat:

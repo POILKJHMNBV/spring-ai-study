@@ -1,0 +1,10 @@
+spring:
+  ai:
+    mcp:
+      client:
+        enabled: false
+
+app:
+  # 默认仍然走 Day2~Day6 的本地 Kafka Tool。
+  kafka-tool-mode: LOCAL
+

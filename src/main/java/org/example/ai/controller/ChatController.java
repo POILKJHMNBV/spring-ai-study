@@ -4,6 +4,7 @@ import org.example.ai.harness.AgentRunResult;
 import org.example.ai.harness.AgentRunner;
 import org.example.ai.security.ConversationSecurity;
 import org.example.ai.service.ChatService;
+import org.example.ai.tool.KafkaToolMode;
 import org.example.ai.tool.mock.MockScenario;
 import org.example.ai.tool.mock.OpsMockDataProvider;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +33,8 @@ public class ChatController {
     public String agent(String userPrompt,
                         String conversationId,
                         @RequestParam(defaultValue = "true") boolean memoryEnabled) {
-        AgentRunResult result = agentRunner.run(userPrompt, conversationId, memoryEnabled);
+        // AgentRunResult result = agentRunner.run(userPrompt, conversationId, memoryEnabled);
+        AgentRunResult result = agentRunner.run(userPrompt, conversationId, memoryEnabled, KafkaToolMode.MCP);
         return result.answer();
     }
 

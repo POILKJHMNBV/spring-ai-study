@@ -1,0 +1,27 @@
+server:
+  # Day7 只允许本机访问。
+  #
+  # Spring AI MCP HTTP Server 默认没有认证，
+  # 学习阶段不要直接监听 0.0.0.0。
+  address: 127.0.0.1
+  port: 8091
+
+spring:
+  application:
+    name: kafka-mcp-server
+
+  ai:
+    mcp:
+      server:
+        name: kafka-ops-mcp-server
+        version: 1.0.0
+
+        # 当前 Tool 是普通同步 Java 方法。
+        type: SYNC
+
+        # Spring AI 2.x 新项目使用 Streamable HTTP；
+        # SSE 已废弃。
+        protocol: STREAMABLE
+
+        annotation-scanner:
+          enabled: true

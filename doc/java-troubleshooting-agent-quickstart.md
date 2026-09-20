@@ -579,10 +579,10 @@ flowchart TD
 
 ### 验收
 
-- [ ] Agent 能发现并调用 MCP 暴露的 Kafka Tool；
-- [ ] MCP Server 关闭时请求能受控失败；
-- [ ] 同一评测案例在本地 Tool 与 MCP Tool 下主要结论一致；
-- [ ] 你能解释 `@Tool` 与 MCP 各自解决的问题。
+- [x] Agent 能发现并调用 MCP 暴露的 Kafka Tool；
+- [x] MCP Server 关闭时请求能受控失败；
+- [x] 同一评测案例在本地 Tool 与 MCP Tool 下主要结论一致；
+- [x] 你能解释 `@Tool` 与 MCP 各自解决的问题。
 
 ---
 
