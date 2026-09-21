@@ -39,8 +39,17 @@ import static org.example.ai.common.Constants.SYSTEM_PROMPT;
 @Service
 @Slf4j
 public class AgentRunner {
+    /**
+     * 循环控制，Agent底层循环最大步数
+     */
     private static final int MAX_STEPS = 6;
+    /**
+     * Tool 调用超时时间
+     */
     private static final Duration TOOL_TIMEOUT = Duration.ofSeconds(3);
+    /**
+     * Tool 调用最大重试次数
+     */
     private static final int TOOL_MAX_RETRIES = 1;
     private final ToolCallingManager toolCallingManager;
     private final AgentToolProvider agentToolProvider;
@@ -67,6 +76,13 @@ public class AgentRunner {
         return run(userPrompt, conversationId, true);
     }
 
+    /**
+     * 执行一次 Agent。
+     *
+     * @param userPrompt     当前用户问题
+     * @param conversationId 当前会话 ID
+     * @param memoryEnabled  是否启用跨轮 Memory；Day5 对照实验时可关闭
+     */
     public AgentRunResult run(String userPrompt, String conversationId, boolean memoryEnabled) {
         return run(userPrompt, conversationId, memoryEnabled, KafkaToolMode.LOCAL);
     }
@@ -76,8 +92,8 @@ public class AgentRunner {
      *
      * @param userPrompt     当前用户问题
      * @param conversationId 当前会话 ID
-     * @param memoryEnabled  是否启用跨轮 Memory；
-     *                       Day5 对照实验时可关闭
+     * @param memoryEnabled  是否启用跨轮 Memory；Day5 对照实验时可关闭
+     * @param kafkaToolMode  Kafka Tool 的接入方式
      */
     public AgentRunResult run(String userPrompt, String conversationId, boolean memoryEnabled, KafkaToolMode kafkaToolMode) {
         String safeConversationId = ConversationSecurity.requireValidConversationId(conversationId);
@@ -102,8 +118,7 @@ public class AgentRunner {
 
         try {
             toolCallbacks = agentToolProvider.getToolCallbacks(kafkaToolMode);
-        }
-        catch (RuntimeException e) {
+        } catch (RuntimeException e) {
 
             /*
              * MCP Tool discovery 失败也必须形成
@@ -111,11 +126,10 @@ public class AgentRunner {
              * 而不是直接向 Controller 抛 500。
              */
             trace.recordStop(0, "Tool discovery failed: " + e.getMessage());
-
+            log.error("Tool discovery failed:", e);
             return new AgentRunResult(
                     AgentRunResult.RunStatus.FAILED,
-                    "工具发现失败："
-                            + e.getMessage(),
+                    "工具发现失败：" + e.getMessage(),
                     0,
                     trace.snapshot()
             );
@@ -138,9 +152,7 @@ public class AgentRunner {
 
         // 获取 Spring Boot 已经配置好的 Ollama Options
         if (!(chatModel.getOptions() instanceof OllamaChatOptions baseOptions)) {
-            throw new IllegalStateException(
-                    "Expected OllamaChatOptions"
-            );
+            throw new IllegalStateException("Expected OllamaChatOptions");
         }
 
         // 在原有配置基础上增加 ToolCallbacks
@@ -181,6 +193,7 @@ public class AgentRunner {
                 stopWatch.start();
                 response = chatModel.call(prompt);
             } catch (Exception e) {
+                log.error("LLM call failed:", e);
                 trace.recordStop(step, "LLM call failed: " + e.getMessage());
                 return new AgentRunResult(
                         AgentRunResult.RunStatus.FAILED,
@@ -234,12 +247,12 @@ public class AgentRunner {
             try {
                 executionPolicy.check(toolCalls, policyState);
             } catch (ExecutionPolicy.PolicyViolationException e) {
+                log.error("Execution policy rejected tool call: {}", e.getMessage());
                 trace.recordPolicyReject(step, e.getMessage());
                 trace.recordStop(step, "Execution policy rejected tool call");
                 return new AgentRunResult(
                         AgentRunResult.RunStatus.POLICY_REJECTED,
-                        "工具调用被安全策略拒绝："
-                                + e.getMessage(),
+                        "工具调用被安全策略拒绝：" + e.getMessage(),
                         step,
                         trace.snapshot()
                 );
@@ -252,11 +265,11 @@ public class AgentRunner {
                 toolResult = toolCallingManager.executeToolCalls(prompt, response);
             }
             catch (RuntimeException e) {
+                log.error("Tool execution failed:", e);
                 trace.recordStop(step, "Tool execution failed: " + e.getMessage());
                 return new AgentRunResult(
                         AgentRunResult.RunStatus.FAILED,
-                        "工具执行失败："
-                                + e.getMessage(),
+                        "工具执行失败：" + e.getMessage(),
                         step,
                         trace.snapshot()
                 );
@@ -276,12 +289,12 @@ public class AgentRunner {
         /*
          * 达到 MAX_STEPS
          */
+        log.info("Maximum agent steps exceeded");
         trace.recordStop(MAX_STEPS, "Maximum agent steps exceeded");
 
         return new AgentRunResult(
                 AgentRunResult.RunStatus.STEP_LIMIT_EXCEEDED,
-                "Agent 已达到最大执行步数，"
-                        + "当前证据不足以继续自动排查。",
+                "Agent 已达到最大执行步数，" + "当前证据不足以继续自动排查。",
                 MAX_STEPS,
                 trace.snapshot()
         );

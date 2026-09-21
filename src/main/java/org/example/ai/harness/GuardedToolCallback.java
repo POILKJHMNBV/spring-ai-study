@@ -1,6 +1,7 @@
 package org.example.ai.harness;
 
 import jakarta.annotation.Nullable;
+import lombok.extern.slf4j.Slf4j;
 import org.example.ai.security.ConversationSecurity;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.ai.chat.model.ToolContext;
@@ -14,9 +15,10 @@ import java.util.concurrent.*;
 import java.util.function.IntSupplier;
 
 /**
- * ToolCallback包装类
+ * ToolCallback包装类，用于 tool 调用的超时、重试、日志记录等处理
  */
 @NullMarked
+@Slf4j
 public class GuardedToolCallback implements ToolCallback {
     /**
      * 单次 Tool Result 最多允许进入模型 Context 的字符数。
@@ -119,7 +121,7 @@ public class GuardedToolCallback implements ToolCallback {
                  */
                 String sanitizedResult = ConversationSecurity.sanitizeSensitiveText(rawResult);
 
-                String result = truncateToolResult(sanitizedResult);
+                String result = truncateToolResult(toolName, sanitizedResult);
 
                 trace.recordTool(
                         stepSupplier.getAsInt(),
@@ -133,6 +135,7 @@ public class GuardedToolCallback implements ToolCallback {
 
                 return result;
             } catch (TimeoutException e) {
+                log.error("Tool execution timeout: {} (attempt {})", toolName, attempt, e);
 
                 future.cancel(true);
 
@@ -176,11 +179,13 @@ public class GuardedToolCallback implements ToolCallback {
 
                 return errorResult;
             } catch (InterruptedException e) {
+                log.error("Tool execution interrupted: {} (attempt {})", toolName, attempt, e);
 
                 Thread.currentThread().interrupt();
 
                 throw new IllegalStateException("Tool execution interrupted: " + toolName, e);
             } catch (ExecutionException e) {
+                log.error("Tool execution failed: {} (attempt {})", toolName, attempt, e);
 
                 long elapsedMs = elapsedMs(start);
 
@@ -200,6 +205,7 @@ public class GuardedToolCallback implements ToolCallback {
             }
         }
 
+        log.error("Unexpected tool execution state: {}", toolName);
         throw new IllegalStateException("Unexpected tool execution state");
     }
 
@@ -210,14 +216,20 @@ public class GuardedToolCallback implements ToolCallback {
     /**
      * 限制 Tool Result 的最大长度。
      *
+     * @param toolName Tool 名称
      * @param result Tool 原始结果
      * @return 可安全放入模型 Context 的结果
      */
-    private String truncateToolResult(String result) {
+    private String truncateToolResult(String toolName , String result) {
         if (result.length() <= MAX_TOOL_RESULT_CHARS) {
             return result;
         }
 
+        log.warn("Tool result too long for {} ({}, truncated to {} chars)",
+                toolName,
+                result.length(),
+                MAX_TOOL_RESULT_CHARS
+        );
         String preview = result.substring(0, MAX_TOOL_RESULT_CHARS);
 
         /*

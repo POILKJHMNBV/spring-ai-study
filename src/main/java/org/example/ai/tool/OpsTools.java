@@ -1,6 +1,8 @@
 package org.example.ai.tool;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.ai.tool.client.LogQueryClient;
+import org.example.ai.tool.client.ServiceMetricsClient;
 import org.example.ai.tool.dto.ErrorLog;
 import org.example.ai.tool.dto.KafkaStatus;
 import org.example.ai.tool.dto.ServiceStatus;
@@ -22,9 +24,17 @@ import java.util.List;
 @Slf4j
 @Component
 public class OpsTools {
+    /**
+     * Kafka LOCAL 模式仍然使用现有 Mock。
+     * MCP 模式下 AgentToolProvider 会把该 Tool 替换掉。
+     */
     private final OpsMockDataProvider dataProvider;
-    public OpsTools(OpsMockDataProvider dataProvider) {
+    private final ServiceMetricsClient serviceMetricsClient;
+    private final LogQueryClient logQueryClient;
+    public OpsTools(OpsMockDataProvider dataProvider, ServiceMetricsClient serviceMetricsClient, LogQueryClient logQueryClient) {
         this.dataProvider = dataProvider;
+        this.serviceMetricsClient = serviceMetricsClient;
+        this.logQueryClient = logQueryClient;
     }
 
     @Tool(
@@ -41,7 +51,7 @@ public class OpsTools {
 
         log.info("Tool called: getServiceStatus(serviceName={})", serviceName);
 
-        return dataProvider.getServiceStatus(serviceName);
+        return serviceMetricsClient.getServiceStatus(serviceName);
     }
 
     @Tool(
@@ -80,6 +90,6 @@ public class OpsTools {
                 minutes
         );
 
-        return dataProvider.queryErrorLogs(serviceName, minutes);
+        return logQueryClient.queryErrorLogs(serviceName, minutes);
     }
 }

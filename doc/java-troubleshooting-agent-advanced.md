@@ -306,11 +306,11 @@ Tool 不应同时承担 URL 拼接、HTTP、鉴权、重试、JSON 解析和业�
 
 ### 验收
 
-- [ ] Agent 的 Tool Schema 没变化；
-- [ ] Mock 数据不再直接存在于 Tool 方法；
-- [ ] HTTP Server 停止时 Agent 能受控结束；
-- [ ] Tool failure 会出现在 Trace；
-- [ ] Day6 Eval 中不受 HTTP 行为影响的案例仍能通过。
+- [x] Agent 的 Tool Schema 没变化；
+- [x] Mock 数据不再直接存在于 Tool 方法；
+- [x] HTTP Server 停止时 Agent 能受控结束；
+- [x] Tool failure 会出现在 Trace；
+- [x] Day6 Eval 中不受 HTTP 行为影响的案例仍能通过。
 
 ---
 

@@ -39,7 +39,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
                  * spring.ai.ollama.chat.* 下。
                  */
                 "spring.ai.ollama.chat.temperature=0.0",
-                "spring.ai.ollama.chat.seed=42"
+                "spring.ai.ollama.chat.seed=42",
+                /*
+                 * Day8 正常运行使用 HTTP，
+                 * 但历史 Eval 必须继续使用固定数据集，
+                 * 否则每次网络状态都会污染基准结果。
+                 */
+                "app.ops.data-source=MOCK"
         }
 )
 class AgentEvaluationIT {

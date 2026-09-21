@@ -188,14 +188,18 @@ public class TraceRecorder {
         events.add(event);
 
         log.info(
-                "TRACE step={} type={} name={} status={} elapsed={}ms input={} output={}",
+                "TRACE step={} type={} name={} status={} elapsed={}ms input={} output={} promptTokens={}, completionTokens={}, totalTokens={}, status={}",
                 event.step(),
                 event.type(),
                 event.name(),
                 event.status(),
                 event.elapsedMs(),
                 event.input(),
-                event.output()
+                event.output(),
+                event.promptTokens(),
+                event.completionTokens(),
+                event.totalTokens(),
+                event.status()
         );
     }
 

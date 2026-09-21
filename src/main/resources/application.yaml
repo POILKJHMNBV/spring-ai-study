@@ -22,3 +22,12 @@ rag:
 logging:
   level:
     org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: info
+
+app:
+  ops:
+    # 正常运行 Day8 时走 HTTP。
+    # 固定回归测试会覆盖成 MOCK。
+    data-source: HTTP
+
+    # 独立 service-observer 测试服务。
+    base-url: http://127.0.0.1:18081

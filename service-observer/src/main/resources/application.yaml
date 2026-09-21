@@ -1,0 +1,8 @@
+server:
+  # 测试服务只绑定本机，不向局域网暴露。
+  address: 127.0.0.1
+  port: 18081
+
+spring:
+  application:
+    name: service-observer
