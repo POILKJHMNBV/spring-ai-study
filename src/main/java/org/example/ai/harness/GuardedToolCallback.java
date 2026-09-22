@@ -10,7 +10,6 @@ import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.metadata.ToolMetadata;
 
 import java.time.Duration;
-import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.function.IntSupplier;
 
@@ -134,77 +133,33 @@ public class GuardedToolCallback implements ToolCallback {
                 );
 
                 return result;
-            } catch (TimeoutException e) {
-                log.error("Tool execution timeout: {} (attempt {})", toolName, attempt, e);
-
-                future.cancel(true);
-
-                long elapsedMs = elapsedMs(start);
-
-                // 第一次 timeout，可以再试一次
-                if (attempt < maxAttempts) {
-
-                    trace.recordTool(
-                            stepSupplier.getAsInt(),
-                            toolName,
-                            toolInput,
-                            "timeout, retrying",
-                            elapsedMs,
-                            attempt,
-                            "TIMEOUT_RETRY"
-                    );
-
-                    continue;
-                }
-
-                // 重试后仍然失败：
-                // 将失败作为 Observation 返回给 LLM
-                String errorResult = """
-                        {
-                          "status": "ERROR",
-                          "errorType": "TIMEOUT",
-                          "message": "tool execution timed out"
-                        }
-                        """;
-
-                trace.recordTool(
-                        stepSupplier.getAsInt(),
-                        toolName,
-                        toolInput,
-                        errorResult,
-                        elapsedMs,
-                        attempt,
-                        "TIMEOUT"
-                );
-
-                return errorResult;
             } catch (InterruptedException e) {
-                log.error("Tool execution interrupted: {} (attempt {})", toolName, attempt, e);
-
+                future.cancel(true);
                 Thread.currentThread().interrupt();
-
+                trace.recordTool(stepSupplier.getAsInt(), toolName, toolInput,
+                        ToolFailure.classify(e).observation(), elapsedMs(start), attempt, "INTERRUPTED");
                 throw new IllegalStateException("Tool execution interrupted: " + toolName, e);
-            } catch (ExecutionException e) {
-                log.error("Tool execution failed: {} (attempt {})", toolName, attempt, e);
-
-                long elapsedMs = elapsedMs(start);
-
-                trace.recordTool(
-                        stepSupplier.getAsInt(),
-                        toolName,
-                        toolInput,
-                        e.getCause() == null
-                                ? e.getMessage()
-                                : e.getCause().getMessage(),
-                        elapsedMs,
-                        attempt,
-                        "FAILED"
-                );
-
-                throw new IllegalStateException("Tool execution failed: " + toolName, e.getCause());
+            } catch (TimeoutException | ExecutionException e) {
+                future.cancel(true);
+                ToolFailure failure = ToolFailure.classify(e);
+                boolean retry = failure.retryable() && attempt < maxAttempts;
+                trace.recordTool(stepSupplier.getAsInt(), toolName, toolInput,
+                        failure.observation(), elapsedMs(start), attempt,
+                        failure.type().name() + (retry ? "_RETRY" : ""));
+                if (!retry) {
+                    return failure.observation();
+                }
+                // 限流时遵守 Retry-After；中断必须停止等待且不能再次调用下游。
+                try {
+                    TimeUnit.NANOSECONDS.sleep(failure.delay().toNanos());
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    trace.recordTool(stepSupplier.getAsInt(), toolName, toolInput,
+                            failure.observation(), elapsedMs(start), attempt, "RETRY_INTERRUPTED");
+                    throw new IllegalStateException("Tool retry interrupted", interrupted);
+                }
             }
         }
-
         log.error("Unexpected tool execution state: {}", toolName);
         throw new IllegalStateException("Unexpected tool execution state");
     }

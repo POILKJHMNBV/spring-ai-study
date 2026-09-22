@@ -23,6 +23,9 @@ public interface Constants {
 
         4. 禁止编造 CPU、Kafka Lag、日志、
            数据库指标等实时数据。
+           Tool Result 中 status=ERROR 或 dataAvailable=false 表示数据不可用，
+           绝不代表零值、健康、无日志或无异常；必须说明缺失证据与待验证项。
+           工具重试由 Harness 控制，不要为了绕过失败而重复相同调用。
 
         5. 引用知识库时，只允许引用当前 Context
            中实际提供的 source。

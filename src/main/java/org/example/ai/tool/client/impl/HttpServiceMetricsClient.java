@@ -6,6 +6,7 @@ import org.example.ai.tool.dto.ServiceStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
+import org.example.ai.tool.client.InvalidToolResponseException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -60,20 +61,20 @@ public class HttpServiceMetricsClient implements ServiceMetricsClient {
      * 对远端 HTTP Contract 做最低限度校验。
      *
      * <p>
-     * Day8 的重点是明确区分“真实的 0”与“远端字段缺失”。
-     * 更完整的 INVALID_RESPONSE Error Taxonomy 留到 Day9。
+     * 明确区分“真实的 0”与“远端字段缺失”。
+     * 契约异常由 Harness 分类为 INVALID_RESPONSE，禁止重试。
      * </p>
      */
     private ServiceStatus validateAndConvert(String requestedServiceName, ServiceStatusHttpResponse response) {
 
         if (response == null) {
-            throw new IllegalStateException("服务指标 HTTP 响应为空");
+            throw new InvalidToolResponseException("服务指标 HTTP 响应为空");
         }
 
         List<String> missingFields = getMissingFields(response);
 
         if (!missingFields.isEmpty()) {
-            throw new IllegalStateException("服务指标 HTTP 数据不完整，缺失字段：" + missingFields);
+            throw new InvalidToolResponseException("服务指标 HTTP 数据不完整，缺失字段：" + missingFields);
         }
 
         /*
@@ -81,7 +82,7 @@ public class HttpServiceMetricsClient implements ServiceMetricsClient {
          * 远端却错误地返回另一个服务的数据。
          */
         if (!requestedServiceName.equals(response.serviceName())) {
-            throw new IllegalStateException(
+            throw new InvalidToolResponseException(
                     "服务指标 HTTP 响应与请求服务不一致，requested="
                             + requestedServiceName
                             + ", actual="

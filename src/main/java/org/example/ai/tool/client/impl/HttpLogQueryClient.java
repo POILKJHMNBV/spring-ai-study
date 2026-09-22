@@ -6,6 +6,7 @@ import org.example.ai.tool.dto.ErrorLog;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
+import org.example.ai.tool.client.InvalidToolResponseException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -57,7 +58,7 @@ public class HttpLogQueryClient implements LogQueryClient {
                         .body(ErrorLogHttpResponse[].class);
 
         if (response == null) {
-            throw new IllegalStateException("日志 HTTP 响应为空");
+            throw new InvalidToolResponseException("日志 HTTP 响应为空");
         }
 
         return Arrays.stream(response)
@@ -76,7 +77,7 @@ public class HttpLogQueryClient implements LogQueryClient {
                 || response.message() == null
                 || response.message().isBlank()) {
 
-            throw new IllegalStateException("日志 HTTP 数据不完整");
+            throw new InvalidToolResponseException("日志 HTTP 数据不完整");
         }
 
         return new ErrorLog(

@@ -59,7 +59,7 @@ public class ExecutionPolicy {
         int nextTotalToolCalls = state.totalToolCalls + toolCalls.size();
 
         if (nextTotalToolCalls > MAX_TOOL_CALLS_PER_RUN) {
-            throw new IllegalStateException("单次 Agent 请求的 Tool 调用数量超过限制: " + MAX_TOOL_CALLS_PER_RUN);
+            throw new PolicyViolationException("单次 Agent 请求的 Tool 调用数量超过限制: " + MAX_TOOL_CALLS_PER_RUN);
         }
 
         state.totalToolCalls = nextTotalToolCalls;

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>鹈鹕骑自行车</title>
+    <style>
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f8ff;
+        }
+
+        .鹈鹕 {
+            animation: 鹭鹕动画 2s infinite;
+        }
+
+        @keyframes 鹭鹕动画 {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+            50% {
+                transform: rotate(10deg);
+            }
+        }
+
+        .自行车 {
+            animation: 踏板动画 1s infinite;
+        }
+
+        @keyframes 踏板动画 {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+            50% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <svg width="400" height="300">
+        <!-- 鹭鹕 -->
+        <g class="鹈鹕">
+            <path d="M100 150
+                         Q 150 100 200 150
+                         Q 250 200 220 230
+                         L 200 250
+                         Q 150 280 100 230"
+                  fill="white"
+                  stroke="black"
+                  stroke-width="2"/>
+            <!-- 鹭鹕脖子动画 -->
+            <animate
+                    attributeName="transform"
+                    from="rotate(0 100 150)"
+                    to="rotate(20 100 150)"
+                    dur="0.5s"
+                    repeatCount="indefinite"
+                    keyTimes="0;0.5;1"
+                    values="rotate(0 100 150); rotate(20 100 150); rotate(0 100 150)"
+                    type="rotate"/>
+        </g>
+
+        <!-- 自行车 -->
+        <g class="自行车">
+            <!-- 车架 -->
+            <path d="M200 250
+                         L 200 200
+                         L 300 200
+                         L 300 250
+                         Z"
+                  fill="lightgray"
+                  stroke="black"
+                  stroke-width="2"/>
+            <!-- 前轮 -->
+            <circle cx="200" cy="200" r="20" fill="white"/>
+            <!-- 后轮 -->
+            <circle cx="300" cy="200" r="20" fill="white"/>
+            <!-- 踏板 -->
+            <line x1="250" y1="200" x2="250" y2="170" stroke="black" stroke-width="2"/>
+            <animate
+                    attributeName="transform"
+                    from="rotate(0 250 200)"
+                    to="rotate(360 250 200)"
+                    dur="1s"
+                    repeatCount="indefinite"
+                    type="rotate"/>
+        </g>
+    </svg>
+</div>
+</body>
+</html>
