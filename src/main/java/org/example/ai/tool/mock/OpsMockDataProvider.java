@@ -1,6 +1,7 @@
 package org.example.ai.tool.mock;
 
 import org.example.ai.tool.dto.ErrorLog;
+import org.example.ai.tool.dto.DependencyStatus;
 import org.example.ai.tool.dto.KafkaStatus;
 import org.example.ai.tool.dto.ServiceStatus;
 import org.springframework.stereotype.Component;
@@ -224,9 +225,7 @@ public class OpsMockDataProvider {
      * 返回错误日志。
      *
      * <p>
-     * DB / RPC 暂时仍通过现有日志 Tool 提供证据，
-     * Day6 不为了 Eval 增加新的数据库/RPC Tool，
-     * 避免偏离第一周“三个只读 Tool”的范围。
+     * 日志作为辅助线索，Day10 使用独立依赖指标交叉验证。
      * </p>
      */
     public List<ErrorLog> queryErrorLogs(String serviceName, int minutes) {
@@ -290,6 +289,18 @@ public class OpsMockDataProvider {
                     )
             );
         };
+    }
+
+    /** 返回与 E03/E04 一致的独立指标证据，其他场景依赖正常。 */
+    public DependencyStatus getDependencyStatus(String serviceName) {
+        MockScenario scenario = currentScenario.get();
+        return new DependencyStatus(serviceName,
+                scenario == MockScenario.E03_DATABASE_SLOW
+                        ? new DependencyStatus.Database(2500.0, 49, 50)
+                        : new DependencyStatus.Database(30.0, 10, 50),
+                scenario == MockScenario.E04_RPC_TIMEOUT
+                        ? new DependencyStatus.Rpc("payment-gateway", 3200.0, 0.35)
+                        : new DependencyStatus.Rpc("payment-gateway", 80.0, 0.001));
     }
 
     /**

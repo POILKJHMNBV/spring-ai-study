@@ -67,12 +67,12 @@ final class AgentEvaluator {
                             + "|消费者(?:数量)?"
                             + "|threadpool(?:active|max)?"
                             + "|线程池(?:活跃线程|最大线程|active|max)?"
-                            + "|p99"
+                            + "|p99(?:ms)?"
                             + "|timeout(?:\\s*rate)?"
                             + "|超时率"
                             + "|连接池(?:active|max)?"
                             + ")"
-                            + "[^0-9-]{0,20}"
+                            + "[^0-9A-Za-z\\r\\n-]{0,20}"
                             + "(-?\\d+(?:\\.\\d+)?)"
             );
 
@@ -311,8 +311,14 @@ final class AgentEvaluator {
                 )
         );
 
+        // Day10：允许从独立依赖指标换算连接池占用率和 RPC 超时百分比。
+        addRatio(supportedNumbers, findNamedNumber(toolOutput, "activeConnections"),
+                findNamedNumber(toolOutput, "maxConnections"));
+        addRatio(supportedNumbers, findNamedNumber(toolOutput, "timeoutRate"), BigDecimal.ONE);
+
         String normalizedAnswer =
-                answer.replace(",", "");
+                // 知识引用编号不是实时指标；也不允许正则跨行捕获列表序号。
+                answer.replace(",", "").replaceAll("\\[KB-\\d+\\]", "");
 
         Matcher matcher =
                 METRIC_VALUE_PATTERN.matcher(

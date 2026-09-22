@@ -7,6 +7,8 @@ spring:
     ollama:
       chat:
         model: qwen3.5:9b
+        # Day10 四个工具的 Schema、RAG 与多轮证据需要更大的上下文，避免本机默认 4096 截断。
+        num-ctx: 8192
       embedding:
         # 中文知识库使用 BGE-M3；更换模型后由启动流程全量重建内存索引。
         model: bge-m3

@@ -22,11 +22,13 @@ import java.util.Locale;
  * getServiceStatus  -> 本地
  * getKafkaStatus    -> 本地
  * queryErrorLogs    -> 本地
+ * getDependencyStatus -> 本地 Adapter（HTTP / MOCK）
  *
  * MCP:
  * getServiceStatus  -> 本地
  * getKafkaStatus    -> MCP
  * queryErrorLogs    -> 本地
+ * getDependencyStatus -> 本地 Adapter（HTTP / MOCK）
  *
  * AgentRunner 不需要关心 Tool 来自本地方法还是 MCP Server。
  * </p>

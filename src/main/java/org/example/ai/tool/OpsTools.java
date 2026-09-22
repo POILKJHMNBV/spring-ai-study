@@ -2,6 +2,8 @@ package org.example.ai.tool;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.ai.tool.client.LogQueryClient;
+import org.example.ai.tool.client.DependencyMetricsClient;
+import org.example.ai.tool.dto.DependencyStatus;
 import org.example.ai.tool.client.ServiceMetricsClient;
 import org.example.ai.tool.dto.ErrorLog;
 import org.example.ai.tool.dto.KafkaStatus;
@@ -14,7 +16,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Agent 可调用的三个只读运维 Tool。
+ * Agent 可调用的四个只读运维 Tool。
  *
  * <p>
  * Tool 定义保持稳定，具体 Mock 数据交给 OpsMockDataProvider。
@@ -31,10 +33,21 @@ public class OpsTools {
     private final OpsMockDataProvider dataProvider;
     private final ServiceMetricsClient serviceMetricsClient;
     private final LogQueryClient logQueryClient;
-    public OpsTools(OpsMockDataProvider dataProvider, ServiceMetricsClient serviceMetricsClient, LogQueryClient logQueryClient) {
+    /** DB/RPC 指标来源，与工具 Schema 解耦。 */
+    private final DependencyMetricsClient dependencyMetricsClient;
+    public OpsTools(OpsMockDataProvider dataProvider, ServiceMetricsClient serviceMetricsClient, LogQueryClient logQueryClient,
+                    DependencyMetricsClient dependencyMetricsClient) {
         this.dataProvider = dataProvider;
         this.serviceMetricsClient = serviceMetricsClient;
         this.logQueryClient = logQueryClient;
+        this.dependencyMetricsClient = dependencyMetricsClient;
+    }
+
+    /** 获取独立依赖证据，日志和知识库不能替代当前指标。 */
+    @Tool(description = "查询服务的数据库 P99(ms)、连接池占用及下游 RPC P99(ms)、超时率(0～1)。判断 DB 慢或 RPC 超时时必须与服务和 Kafka 指标交叉验证；失败表示证据不可用。")
+    public DependencyStatus getDependencyStatus(
+            @ToolParam(description = "需要查询的服务名称，例如 payment-service") String serviceName) {
+        return dependencyMetricsClient.getDependencyStatus(serviceName);
     }
 
     @Tool(

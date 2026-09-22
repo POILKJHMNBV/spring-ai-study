@@ -164,6 +164,12 @@ public class TraceRecorder {
         ));
     }
 
+    /** 空正文补问属于模型恢复事件，不表示 Agent 已结束。 */
+    public void recordEmptyAnswerRetry(int step) {
+        add(new TraceEvent(step, EventType.MODEL, "chatModel.call", null,
+                "模型正文为空，最多补问一次", 0, null, null, null, "EMPTY_ANSWER_RETRY"));
+    }
+
     public void recordStop(
             int step,
             String reason

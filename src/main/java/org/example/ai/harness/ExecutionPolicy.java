@@ -27,6 +27,7 @@ public class ExecutionPolicy {
     private static final Set<String> ALLOWED_TOOLS = Set.of(
             "getKafkaStatus",
             "getServiceStatus",
+            "getDependencyStatus",
             "queryErrorLogs"
     );
 
@@ -86,7 +87,7 @@ public class ExecutionPolicy {
                     }
                 }
 
-                case "getServiceStatus", "queryErrorLogs" -> {
+                case "getServiceStatus", "getDependencyStatus", "queryErrorLogs" -> {
 
                     String serviceName = arguments.path("serviceName").asString();
 

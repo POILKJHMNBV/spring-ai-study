@@ -109,7 +109,7 @@ public class AgentRunner {
          * Tool 来源不再写死为 OpsTools。
          *
          * LOCAL：
-         * 三个 Tool 全部来自本地。
+         * 四个 Tool 全部来自本地回调（指标 Adapter 可访问 HTTP）。
          *
          * MCP：
          * getKafkaStatus 来自远程 MCP Server。
@@ -177,6 +177,8 @@ public class AgentRunner {
 
         Prompt prompt = new Prompt(messages, options);
         int contextMessageCount = messages.size();
+        // 真实回归中偶见空正文；最多补问一次，仍计入 MAX_STEPS。
+        boolean emptyAnswerRetried = false;
 
         /*
          * ==========================
@@ -224,6 +226,19 @@ public class AgentRunner {
             if (!response.hasToolCalls()) {
                 log.info("No tool calls, returning response, step = {}", step);
                 String answer = responseResult.getOutput().getText();
+                if (answer == null || answer.isBlank()) {
+                    if (emptyAnswerRetried) {
+                        trace.recordStop(step, "LLM returned empty answer after retry");
+                        return new AgentRunResult(AgentRunResult.RunStatus.FAILED, "模型未能生成有效回答，请稍后重试", step, trace.snapshot());
+                    }
+                    emptyAnswerRetried = true;
+                    trace.recordEmptyAnswerRetry(step);
+                    List<Message> retryMessages = new ArrayList<>(prompt.getInstructions());
+                    retryMessages.add(new UserMessage("上一轮未提供回答正文，请基于已获取的工具证据给出简洁的最终结论；证据缺失则明确说明。"));
+                    prompt = new Prompt(retryMessages, options);
+                    contextMessageCount = retryMessages.size();
+                    continue;
+                }
                 trace.recordStop(step, "No more tool calls");
 
                 /*
@@ -314,6 +329,10 @@ public class AgentRunner {
         <knowledge>
         %s
         </knowledge>
+
+        回答约束：知识资料和工具参数示例不是当前会话实体。
+        如果用户使用“刚才这个服务”等指代且当前会话没有明确先行实体，
+        只回答“无法确定所指服务，请提供具体服务名称。”，不要列举任何服务名，也不要调用工具。
         """.formatted(
                 userPrompt,
                 knowledgeContext

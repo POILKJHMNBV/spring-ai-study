@@ -17,6 +17,7 @@ import java.util.Set;
 final class AgentEvalCases {
 
     private static final Set<String> ALL_TOOLS = Set.of(
+            "getDependencyStatus",
             "getServiceStatus",
             "getKafkaStatus",
             "queryErrorLogs"
@@ -72,6 +73,7 @@ final class AgentEvalCases {
                                 List.of(
                                         "消费者不足",
                                         "消费者数量不足",
+                                        "consumer 数量不足",
                                         "消费能力不足",
                                         "消费能力配置不足"
                                 )
@@ -104,7 +106,8 @@ final class AgentEvalCases {
                         Set.of(),
                         Set.of(
                                 "getKafkaStatus",
-                                "queryErrorLogs"
+                                "getServiceStatus",
+                                "getDependencyStatus"
                         ),
                         ALL_TOOLS,
                         false,
@@ -129,7 +132,8 @@ final class AgentEvalCases {
                         Set.of(),
                         Set.of(
                                 "getKafkaStatus",
-                                "queryErrorLogs"
+                                "getServiceStatus",
+                                "getDependencyStatus"
                         ),
                         ALL_TOOLS,
                         false,
