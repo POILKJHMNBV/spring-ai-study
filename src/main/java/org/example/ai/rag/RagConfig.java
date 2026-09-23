@@ -10,8 +10,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @Configuration
 @EnableConfigurationProperties(RetrievalProperties.class)
 public class RagConfig {
-    @Bean
-    public VectorStore vectorStore(EmbeddingModel embeddingModel) {
-        return SimpleVectorStore.builder(embeddingModel).build();
-    }
+    // PgVectorStore 由官方 starter 自动配置，避免与其 vectorStore Bean 重名。
+//    @Bean
+//    public VectorStore vectorStore(EmbeddingModel embeddingModel) {
+//        return SimpleVectorStore.builder(embeddingModel).build();
+//    }
 }

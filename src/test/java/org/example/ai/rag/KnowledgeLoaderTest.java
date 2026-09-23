@@ -3,8 +3,6 @@ package org.example.ai.rag;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.ai.vectorstore.VectorStore;
 import tools.jackson.databind.json.JsonMapper;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
@@ -22,8 +20,8 @@ class KnowledgeLoaderTest {
     void rejectSilentTruncationAndRemoveStaleManifest() throws Exception {
         Path manifest = directory.resolve("manifest.json");
         Files.writeString(manifest, "old successful build");
-        var store = mock(VectorStore.class);
-        var loader = new KnowledgeLoader(store, new MarkdownSectionSplitter(), mock(EmbeddingModel.class),
+        var store = mock(PgKnowledgeIndex.class);
+        var loader = new KnowledgeLoader(store, new MarkdownSectionSplitter(),
                 "bge-m3", "http://localhost:1", true, manifest.toString());
         assertThrows(IllegalStateException.class, () -> loader.run(null));
         assertFalse(Files.exists(manifest));
@@ -34,8 +32,9 @@ class KnowledgeLoaderTest {
     void indexFailuresIdentifySourceSectionAndNeverPublishSuccessManifest() throws Exception {
         var server = tagsServer();
         try {
-            var store = mock(VectorStore.class);
-            doThrow(new IllegalArgumentException("input length exceeds context")).when(store).add(anyList());
+            var store = mock(PgKnowledgeIndex.class);
+            doThrow(new IllegalStateException("source=mysql-slow-query.md section=诊断 禁止开启静默截断"))
+                    .when(store).synchronize(anyList(), anyString());
             Path manifest = directory.resolve("manifest.json");
             var loader = loader(store, server, manifest);
             var failure = assertThrows(IllegalStateException.class, () -> loader.run(null));
@@ -50,7 +49,8 @@ class KnowledgeLoaderTest {
     void successfulBuildRecordsFingerprintAndAllChunks() throws Exception {
         var server = tagsServer();
         try {
-            var store = mock(VectorStore.class);
+            var store = mock(PgKnowledgeIndex.class);
+            when(store.synchronize(anyList(), anyString())).thenReturn(new PgKnowledgeIndex.Result(23, 23, 0, 0));
             Path manifest = directory.resolve("manifest.json");
             loader(store, server, manifest).run(null);
             var json = JsonMapper.builder().build().readTree(Files.readString(manifest));
@@ -61,14 +61,15 @@ class KnowledgeLoaderTest {
             assertEquals(64, json.path("corpusHash").asText().length());
             assertEquals(3, json.path("sourceHashes").size());
             assertEquals(MarkdownSectionSplitter.VERSION, json.path("splitterVersion").asText());
-            verify(store, times(23)).add(anyList());
+            verify(store).synchronize(argThat(documents -> documents.size() == 23
+                    && documents.stream().allMatch(d -> d.getMetadata().keySet()
+                    .containsAll(List.of("source", "title", "category", "version", "service")))), anyString());
         } finally { server.stop(0); }
     }
 
-    private KnowledgeLoader loader(VectorStore store, HttpServer server, Path manifest) {
-        var model = mock(EmbeddingModel.class);
-        when(model.dimensions()).thenReturn(1024);
-        return new KnowledgeLoader(store, new MarkdownSectionSplitter(), model, "bge-m3",
+    private KnowledgeLoader loader(PgKnowledgeIndex store, HttpServer server, Path manifest) {
+        when(store.dimensions()).thenReturn(1024);
+        return new KnowledgeLoader(store, new MarkdownSectionSplitter(), "bge-m3",
                 "http://localhost:" + server.getAddress().getPort(), false, manifest.toString());
     }
 

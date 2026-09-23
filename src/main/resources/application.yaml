@@ -1,4 +1,8 @@
 spring:
+  datasource:
+    url: jdbc:postgresql://192.168.161.128:5432/ai_learning
+    username: ai_user
+    password: 1234
   application:
     name: spring-ai-study
   profiles:
@@ -10,10 +14,23 @@ spring:
         # Day10 四个工具的 Schema、RAG 与多轮证据需要更大的上下文，避免本机默认 4096 截断。
         num-ctx: 8192
       embedding:
-        # 中文知识库使用 BGE-M3；更换模型后由启动流程全量重建内存索引。
+        # 中文知识库使用 BGE-M3；模型 digest 变化时重新生成文档向量。
         model: bge-m3
         # 禁止静默截断，超长文档必须定位到小节后重新切分。
         truncate: false
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        # BGE-M3 输出 1024 维；显式配置避免重启时为推断维度调用 Embedding。
+        dimensions: 1024
+        # 保留现有 SHA-256 chunk ID，不能使用默认 UUID 类型。
+        id-type: TEXT
+        schema-validation: true
+        remove-existing-vector-store-table: false
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        schema-name: public
+        table-name: vector_store
 
 rag:
   retrieval:

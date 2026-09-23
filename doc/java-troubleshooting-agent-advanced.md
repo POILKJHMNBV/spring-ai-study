@@ -441,7 +441,60 @@ updatedAt
 service
 ```
 
-测试环境优先使用 Testcontainers PostgreSQL + pgvector。
+测试环境优先使用 本地虚拟机 PostgreSQL + pgvector。
+
+```shell
+# 启动 postgresql
+systemctl start postgresql-15
+
+# 登录 postgresql
+sudo -u postgres psql
+
+# 进入指定数据库
+sudo -u postgres psql -d ai_learning
+
+# 查看数据库
+\l
+
+# 退出登录
+\q
+```
+
+```sql
+# 确认 PostgreSQL 能发现 pgvector
+SELECT name, default_version FROM pg_available_extensions WHERE name = 'vector';
+
+# 创建用户
+CREATE USER ai_user WITH PASSWORD '1234';
+
+# 创建数据库
+CREATE DATABASE ai_learning OWNER ai_user;
+
+# 给 ai_learning 启用 pgvector、hstore、uuid-ossp
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS hstore;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+# 验证 ai_learning 是否启用 pgvector
+SELECT extname, extversion FROM pg_extension WHERE extname = 'vector';
+
+# 创建数据表
+CREATE TABLE document_vector (
+    id BIGSERIAL PRIMARY KEY,
+    content TEXT NOT NULL,
+    embedding VECTOR(3)
+);
+
+# 插入数据
+INSERT INTO document_vector(content, embedding) VALUES('Java 是一种编程语言', '[1,0,0]'),('Spring Boot 用于 Java 后端开发', '[0.9,0.1,0]'),('PostgreSQL 是关系型数据库', '[0.1,0.9,0]'),('苹果是一种水果', '[0,0,1]');
+
+# 查询数据
+SELECT * FROM document_vector;
+SELECT id, content,embedding <-> '[1,0,0]' AS distance FROM document_vector ORDER BY embedding <-> '[1,0,0]' LIMIT 3;
+
+# 创建 HNSW 索引
+CREATE INDEX document_vector_embedding_hnsw ON document_vector USING hnsw (embedding vector_cosine_ops);
+```
 
 ### 必做实验
 
@@ -453,10 +506,12 @@ service
 
 ### 验收
 
-- [ ] 重启后向量数据仍存在；
-- [ ] metadata filter 可以工作；
-- [ ] 测试环境不依赖手工数据库状态；
-- [ ] 能说明 SimpleVectorStore 为什么不适合生产。
+- [x] 重启后向量数据仍存在（销毁并重建整个应用上下文与连接池，23 个块复用，文档 Embedding 为 0）；
+- [x] metadata filter 可以工作；
+- [x] 测试环境不依赖手工数据库状态（已配置虚拟机与扩展，测试自行创建和清理隔离 schema）；
+- [x] 能说明 SimpleVectorStore 为什么不适合生产。
+
+实现、官方依据及验收边界见 [Day11 实验记录](experiments/day11-pgvector.md)。
 
 ---
 

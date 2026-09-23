@@ -3,8 +3,6 @@ package org.example.ai.rag;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.ai.document.Document;
-import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -30,24 +28,21 @@ import java.util.*;
 @Component
 @NullMarked
 public class KnowledgeLoader implements ApplicationRunner {
-    private final VectorStore vectorStore;
+    private final PgKnowledgeIndex index;
     private final MarkdownSectionSplitter splitter;
-    private final EmbeddingModel embeddingModel;
     private final String model;
     private final String baseUrl;
     private final boolean truncate;
     private final Path manifestPath;
 
-    public KnowledgeLoader(VectorStore vectorStore,
+    public KnowledgeLoader(PgKnowledgeIndex index,
                            MarkdownSectionSplitter splitter,
-                           EmbeddingModel embeddingModel,
                            @Value("${spring.ai.ollama.embedding.model}") String model,
                            @Value("${spring.ai.ollama.base-url:http://localhost:11434}") String baseUrl,
                            @Value("${spring.ai.ollama.embedding.truncate:false}") boolean truncate,
                            @Value("${rag.index.manifest-path:target/rag-index/manifest.json}") String manifestPath) {
-        this.vectorStore = vectorStore;
+        this.index = index;
         this.splitter = splitter;
-        this.embeddingModel = embeddingModel;
         this.model = model;
         this.baseUrl = baseUrl;
         this.truncate = truncate;
@@ -71,8 +66,7 @@ public class KnowledgeLoader implements ApplicationRunner {
         }
 
         TreeMap<String, String> hashes = new TreeMap<>();
-        int count = 0;
-        // 每次启动都使用全新的内存索引；manifest 仅作诊断，不加载历史向量。
+        List<Document> documents = new ArrayList<>();
         for (Resource resource : resources) {
             String source = resource.getFilename();
             if (Objects.isNull(source) || source.isBlank()) {
@@ -90,23 +84,26 @@ public class KnowledgeLoader implements ApplicationRunner {
                 throw new IllegalStateException("知识文档没有可索引正文: " + source);
             }
             for (Document chunk : chunks) {
-                try {
-                    // 单块导入便于精确定位模型拒绝的 source/section；失败即中止启动。
-                    vectorStore.add(List.of(chunk));
-                } catch (RuntimeException exception) {
-                    throw new IllegalStateException("索引构建失败 source=" + source + " section="
-                            + chunk.getMetadata().get("section") + " chunkId=" + chunk.getId()
-                            + "；如模型报告超长，请减小切分预算后全量重建，禁止开启静默截断", exception);
-                }
-                count++;
+                LinkedHashMap<String, Object> metadata = new LinkedHashMap<>(chunk.getMetadata());
+                metadata.put("category", metadata.get("domain"));
+                // 当前知识文档是跨服务通用指南，不能冒充某个服务的实时证据。
+                metadata.put("service", "shared");
+                metadata.put("version", hashes.get(source));
+                documents.add(Document.builder().id(chunk.getId()).text(chunk.getText())
+                        .metadata(metadata).build());
             }
         }
+        String fingerprint = MarkdownSectionSplitter.sha256(model + "\n" + digest + "\n"
+                + index.dimensions() + "\n" + MarkdownSectionSplitter.VERSION + "\n"
+                + MarkdownSectionSplitter.TOKEN_BUDGET + "\ntruncate=false\nmetadata-v1");
+        PgKnowledgeIndex.Result result = index.synchronize(documents, fingerprint);
         stopWatch.stop();
 
         Map<String, Object> manifest = new LinkedHashMap<>();
         manifest.put("model", model);
         manifest.put("digest", digest);
-        manifest.put("dimensions", embeddingModel.dimensions());
+        manifest.put("dimensions", index.dimensions());
+        manifest.put("indexFingerprint", fingerprint);
         manifest.put("sourceHashes", hashes);
         manifest.put("corpusHash", MarkdownSectionSplitter.sha256(hashes.toString()));
         manifest.put("splitterVersion", MarkdownSectionSplitter.VERSION);
@@ -114,13 +111,16 @@ public class KnowledgeLoader implements ApplicationRunner {
         manifest.put("tokenEstimator", "JTokkitTokenCountEstimator; not model tokenizer");
         manifest.put("truncate", false);
         manifest.put("files", resources.length);
-        manifest.put("chunks", count);
+        manifest.put("chunks", result.chunks());
+        manifest.put("embedded", result.embedded());
+        manifest.put("reused", result.reused());
+        manifest.put("deleted", result.deleted());
         manifest.put("builtAt", Instant.now().toString());
         manifest.put("elapsedMs", stopWatch.getTotalTimeMillis());
         Files.createDirectories(manifestPath.toAbsolutePath().getParent());
         Files.writeString(manifestPath, JsonMapper.builder().build().writerWithDefaultPrettyPrinter()
                 .writeValueAsString(manifest), StandardCharsets.UTF_8);
-        log.info("Knowledge index rebuilt: {}", manifest);
+        log.info("Knowledge index synchronized: {}", manifest);
     }
 
     private String modelDigest() {
