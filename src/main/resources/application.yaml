@@ -37,6 +37,8 @@ rag:
     top-k: 3
     # 调试全量排序时显式传 threshold=0；默认值由开发集校准。
     threshold: 0.47
+    # Day12 实测重排提升 MRR 但降低验证集 Recall@3，因此保留 HYBRID。
+    mode: HYBRID
 
 logging:
   level:

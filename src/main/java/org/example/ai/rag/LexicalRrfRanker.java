@@ -14,13 +14,17 @@ import java.util.regex.Pattern;
 public class LexicalRrfRanker {
     private static final Pattern TERMS = Pattern.compile("[a-zA-Z][a-zA-Z0-9_]*|[\\p{IsHan}]+");
     private static final double RRF_K = 60;
+
+    /**
+     * 基于传入向量顺序与当前固定候选集的 BM25 词法顺序做 RRF。
+     * 空正文候选保留空词频表以维持下标对应，且不会改写 Document.score。
+     */
     public List<Document> rank(String query, List<Document> candidates) {
         if (candidates.size() < 2) {
             return candidates;
         }
         List<Map<String, Integer>> documents = candidates.stream()
                 .map(d -> terms(Optional.ofNullable(d.getText()).orElse("")))
-                .filter(m -> !m.isEmpty())
                 .toList();
         Set<String> queryTerms = terms(query).keySet();
         double averageLength = documents.stream()
@@ -59,10 +63,12 @@ public class LexicalRrfRanker {
                 .toList();
     }
 
+    /** 计算当前候选的总词频，用于 BM25 长度归一化。 */
     private static int length(Map<String, Integer> terms) {
         return terms.values().stream().mapToInt(Integer::intValue).sum();
     }
 
+    /** 英文保留完整词，中文以相邻双字建词频，不依赖领域关键词表。 */
     private static Map<String, Integer> terms(String text) {
         if (Objects.isNull(text) || text.isBlank()) {
             return Collections.emptyMap();

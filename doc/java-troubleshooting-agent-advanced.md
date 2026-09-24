@@ -584,10 +584,12 @@ Latency
 
 ### 验收
 
-- [ ] RAG 有独立 Eval；
-- [ ] 不依赖最终 LLM 回答评估召回质量；
-- [ ] Reranker 有可量化收益或被证明无收益；
-- [ ] 参数变化必须由数据决定。
+- [x] RAG 有独立 Eval（18 条固定查询，开发/验证分组）；
+- [x] 不依赖最终 LLM 回答评估召回质量（真实 PGVector + BGE-M3）；
+- [x] Reranker 有可量化收益或被证明无收益（MRR 改善但验证集 Recall@3 退化，保留完整对照）；
+- [x] 参数变化必须由数据决定（保留默认 HYBRID、Top3、阈值 0.47，不默认启用存在覆盖率退化的重排）。
+
+实现、官方依据、A/B/C 实测与子 Agent 验收见 [Day12 实验记录](experiments/day12-retrieval-evaluation.md)。
 
 ---
 

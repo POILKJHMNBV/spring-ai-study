@@ -1,0 +1,19 @@
+id	split	kind	expectedSources	query
+D01	dev	paraphrase	thread-pool-exhaustion.md	工作线程都忙着，新任务一直排队
+D02	dev	technical	thread-pool-exhaustion.md	RejectedExecutionException 出现时如何排查执行器
+D03	dev	cross-component	thread-pool-exhaustion.md,kafka-consumer-lag.md	业务线程池阻塞后 Kafka 消费积压上升
+D04	dev	paraphrase	kafka-consumer-lag.md	消息进入速度大于处理速度，消费组落后越来越多
+D05	dev	technical	kafka-consumer-lag.md	Consumer 比 Partition 多仍能提高吞吐吗
+D06	dev	cross-component	kafka-consumer-lag.md,mysql-slow-query.md	Kafka 消费者扩容会不会压垮下游数据库
+D07	dev	paraphrase	mysql-slow-query.md	查询变慢且大量业务线程等着取数据库连接
+D08	dev	technical	mysql-slow-query.md	HikariCP pendingThreads 增加而 idleConnections 为零
+D09	dev	cross-component	mysql-slow-query.md,thread-pool-exhaustion.md	慢 SQL 长时间占用连接导致业务线程阻塞
+V01	validation	plan	thread-pool-exhaustion.md	执行器没有空闲线程
+V02	validation	plan	kafka-consumer-lag.md	消费速度赶不上生产速度
+V03	validation	plan	mysql-slow-query.md	DB P99 暴涨
+V04	validation	plan	mysql-slow-query.md	连接池接近满
+V05	validation	paraphrase	thread-pool-exhaustion.md	任务等待时间拉长，工作队列不断堆高
+V06	validation	technical	kafka-consumer-lag.md	消费位点落后最新 offset 很多
+V07	validation	technical	mysql-slow-query.md	SQL 扫描行数多且出现锁等待
+V08	validation	cross-component	thread-pool-exhaustion.md,kafka-consumer-lag.md	消息交给执行器处理，线程池满载后 lag 升高
+V09	validation	cross-component	kafka-consumer-lag.md,mysql-slow-query.md	数据库响应变慢后 Kafka 消费能力下降
