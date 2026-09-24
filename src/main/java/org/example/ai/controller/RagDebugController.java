@@ -12,6 +12,22 @@ import java.util.Map;
 
 import java.util.List;
 
+/**
+ * RAG 调试控制器：提供 HTTP 接口用于测试和调试检索质量。
+ *
+ * <p>接口说明：
+ * <ul>
+ *   <li>{@code GET /rag/search} — 执行检索并返回结果，支持指定 topK 和 threshold</li>
+ * </ul>
+ * </p>
+ *
+ * <p>设计要点：
+ * <ul>
+ *   <li>参数非法时返回 400，不让非法参数触发模型请求或变成 500</li>
+ *   <li>返回完整的 {@link RetrievedChunk} 列表，便于分析检索质量</li>
+ * </ul>
+ * </p>
+ */
 @RestController
 @RequestMapping("/rag")
 public class RagDebugController {

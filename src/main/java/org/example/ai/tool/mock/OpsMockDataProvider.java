@@ -12,39 +12,42 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * 运维 Tool 的固定 Mock 数据源。
+ * 运维工具的固定 Mock 数据源：为不同评测场景提供可重复的 Tool 输入数据。
  *
- * <p>
- * 当前项目本身就是学习项目，Tool 暂不连接真实生产系统。
- * Day6 通过切换固定场景，对 Agent 进行可重复回归测试。
- * </p>
+ * <p>设计背景：当前项目本身就是学习项目，Tool 暂不连接真实生产系统。
+ * Day6 通过切换固定场景，对 Agent 进行可重复回归测试。</p>
  *
- * <p>
- * 注意：该类不是生产环境的故障模拟框架。
- * 后续接入真实测试环境后应替换为真实只读数据源。
+ * <p>注意：该类不是生产环境的故障模拟框架。
+ * 后续接入真实测试环境后应替换为真实只读数据源。</p>
+ *
+ * <p>使用方式：
+ * <ul>
+ *   <li>调用 {@link #useScenario(MockScenario)} 切换场景</li>
+ *   <li>调用 {@link #reset()} 恢复默认的 BASELINE 场景</li>
+ *   <li>各 getter 方法根据当前场景返回对应的 Mock 数据</li>
+ * </ul>
  * </p>
  */
 @Component
 public class OpsMockDataProvider {
 
     /**
-     * E06 故意设置成大于 AgentRunner 的 3 秒 Tool Timeout。
+     * E06 场景的 Kafka 工具延迟：故意设置成大于 AgentRunner 的 3 秒 Tool Timeout，
+     * 用于验证超时重试机制。
      */
     private static final Duration KAFKA_TIMEOUT_DELAY = Duration.ofSeconds(5);
 
     /**
      * 当前使用的固定 Mock 场景。
-     *
-     * <p>
-     * Eval 串行执行，因此一个进程内只维护一个当前场景。
-     * </p>
+     * 使用 {@link AtomicReference} 保证线程安全，Eval 串行执行，进程内只维护一个当前场景。
      */
     private final AtomicReference<MockScenario> currentScenario = new AtomicReference<>(MockScenario.BASELINE);
 
     /**
      * 切换当前 Mock 场景。
      *
-     * @param scenario 固定评测场景
+     * @param scenario 固定评测场景，不能为 null
+     * @throws NullPointerException 场景为 null
      */
     public void useScenario(MockScenario scenario) {
         currentScenario.set(
@@ -56,14 +59,17 @@ public class OpsMockDataProvider {
     }
 
     /**
-     * 恢复 Day1~Day5 默认 Mock 数据。
+     * 恢复 Day1~Day5 默认 Mock 数据（BASELINE 场景）。
      */
     public void reset() {
         currentScenario.set(MockScenario.BASELINE);
     }
 
     /**
-     * 返回服务运行指标。
+     * 返回服务运行指标：CPU、内存、线程池等。
+     *
+     * @param serviceName 服务名称
+     * @return 服务运行状态，根据当前场景返回不同数据
      */
     public ServiceStatus getServiceStatus(String serviceName) {
 
@@ -146,12 +152,12 @@ public class OpsMockDataProvider {
     }
 
     /**
-     * 返回 Kafka 消费状态。
+     * 返回 Kafka 消费状态：Lag、生产/消费速率、消费者数量。
      *
-     * <p>
-     * E06 会主动休眠 5 秒，
-     * 用于验证 GuardedToolCallback 的 3 秒超时和重试机制。
-     * </p>
+     * <p>E06 场景会主动休眠 5 秒，用于验证 {@link org.example.ai.harness.GuardedToolCallback} 的 3 秒超时和重试机制。</p>
+     *
+     * @param topic Kafka Topic 名称
+     * @return Kafka 消费状态，根据当前场景返回不同数据
      */
     public KafkaStatus getKafkaStatus(String topic) {
 
@@ -222,11 +228,14 @@ public class OpsMockDataProvider {
     }
 
     /**
-     * 返回错误日志。
+     * 返回错误日志摘要。
      *
-     * <p>
-     * 日志作为辅助线索，Day10 使用独立依赖指标交叉验证。
-     * </p>
+     * <p>日志作为辅助线索，Day10 使用独立依赖指标交叉验证。
+     * 不同场景返回不同的日志内容，模拟真实故障现场。</p>
+     *
+     * @param serviceName 服务名称
+     * @param minutes     向前查询分钟数
+     * @return 错误日志列表，根据当前场景返回不同数据
      */
     public List<ErrorLog> queryErrorLogs(String serviceName, int minutes) {
 
@@ -291,7 +300,15 @@ public class OpsMockDataProvider {
         };
     }
 
-    /** 返回与 E03/E04 一致的独立指标证据，其他场景依赖正常。 */
+    /**
+     * 返回依赖指标：数据库 P99、连接池、下游 RPC P99、超时率。
+     *
+     * <p>E03 场景返回数据库慢查询指标，E04 场景返回 RPC 超时指标，其他场景返回正常指标。
+     * 用于 Day10 交叉验证，确保 Agent 不会仅凭日志就断言根因。</p>
+     *
+     * @param serviceName 服务名称
+     * @return 依赖指标，根据当前场景返回不同数据
+     */
     public DependencyStatus getDependencyStatus(String serviceName) {
         MockScenario scenario = currentScenario.get();
         return new DependencyStatus(serviceName,
@@ -304,12 +321,12 @@ public class OpsMockDataProvider {
     }
 
     /**
-     * 模拟慢 Tool。
+     * 模拟慢工具：休眠 5 秒，用于 E06 场景测试超时重试机制。
      *
-     * <p>
-     * 当 GuardedToolCallback 调用 Future.cancel(true) 后，
-     * 正确恢复当前线程的中断状态。
-     * </p>
+     * <p>当 {@link org.example.ai.harness.GuardedToolCallback} 调用 {@code Future.cancel(true)} 后，
+     * 正确恢复当前线程的中断状态并抛出异常。</p>
+     *
+     * @throws IllegalStateException 线程被中断
      */
     private void sleep() {
         try {

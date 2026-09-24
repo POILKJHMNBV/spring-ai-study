@@ -15,10 +15,24 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 /**
- * Day8 HTTP Adapter Contract 测试。
+ * Day8 HTTP Adapter 契约测试：验证 {@link HttpServiceMetricsClient} 对 HTTP 响应的处理。
+ *
+ * <p>测试场景：
+ * <ul>
+ *   <li>{@link #shouldReadServiceStatusWhenHttp200} — 正常 HTTP 200，完整 JSON 响应</li>
+ *   <li>{@link #shouldRejectIncompleteResponse} — 响应缺少必须字段，应抛出异常</li>
+ *   <li>{@link #shouldRejectWrongContentType} — Content-Type 不是 application/json，应抛出异常</li>
+ * </ul>
+ * </p>
+ *
+ * <p>使用 {@link MockRestServiceServer} 模拟 HTTP 服务器，不需要启动真实的 Service Observer。</p>
  */
 class HttpServiceMetricsClientTest {
 
+    /**
+     * 测试正常场景：HTTP 200，完整 JSON 响应。
+     * 验证 Client 能正确解析所有字段。
+     */
     @Test
     void shouldReadServiceStatusWhenHttp200() {
 
@@ -81,6 +95,10 @@ class HttpServiceMetricsClientTest {
         server.verify();
     }
 
+    /**
+     * 测试异常场景：响应缺少必须字段 memoryPercent。
+     * 验证 Client 能识别不完整响应并抛出 {@link IllegalStateException}。
+     */
     @Test
     void shouldRejectIncompleteResponse() {
 
@@ -137,6 +155,10 @@ class HttpServiceMetricsClientTest {
         server.verify();
     }
 
+    /**
+     * 测试异常场景：Content-Type 不是 application/json。
+     * 验证 Client 能正确校验 Content-Type 并抛出 {@link RestClientException}。
+     */
     @Test
     void shouldRejectWrongContentType() {
 

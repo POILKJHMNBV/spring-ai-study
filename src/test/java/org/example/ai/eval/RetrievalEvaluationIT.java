@@ -4,6 +4,7 @@ import org.example.ai.SpringAiStudyApplication;
 import org.example.ai.rag.KnowledgeRetriever;
 import org.example.ai.rag.RetrievalMode;
 import org.example.ai.rag.RetrievedChunk;
+import org.example.ai.rag.MarkdownSectionSplitter;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
@@ -172,7 +173,7 @@ class RetrievalEvaluationIT {
         }
         Files.writeString(directory.resolve("per-case.tsv"), detail, StandardCharsets.UTF_8);
 
-        String datasetHash = org.example.ai.rag.MarkdownSectionSplitter.sha256(
+        String datasetHash = MarkdownSectionSplitter.sha256(
                 Files.readString(Path.of("src", "test", "resources", RetrievalCases.RESOURCE), StandardCharsets.UTF_8));
         var indexManifest = JsonMapper.builder().build().readTree(Files.readString(manifest, StandardCharsets.UTF_8));
         String pgVersion = jdbc.queryForObject("SHOW server_version", String.class);

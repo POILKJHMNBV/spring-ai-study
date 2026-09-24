@@ -36,19 +36,44 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.example.ai.common.Constants.SYSTEM_PROMPT;
 
 
+/**
+ * Agent 执行引擎：负责协调 LLM 决策、工具调用、RAG 检索和会话记忆。
+ *
+ * <p>核心职责：
+ * <ul>
+ *   <li>执行 Agent 循环：LLM 决策 → 工具调用 → 观察结果 → 下一轮决策，直到生成最终回答或达到步数上限</li>
+ *   <li>集成 RAG：在用户问题中注入检索到的知识上下文，辅助 LLM 推理</li>
+ *   <li>工具防护：为每个工具回调包装超时、重试和追踪能力</li>
+ *   <li>安全策略：通过 {@link ExecutionPolicy} 校验工具调用，防止越权或重复调用</li>
+ *   <li>会话记忆：保存成功的对话轮次到 {@link ChatMemory}，支持跨轮上下文</li>
+ *   <li>全链路追踪：通过 {@link TraceRecorder} 记录每步的 LLM 响应、工具调用和上下文变化</li>
+ * </ul>
+ * </p>
+ *
+ * <p>设计要点：
+ * <ul>
+ *   <li>MAX_STEPS 限制循环次数，防止无限循环</li>
+ *   <li>工具调用超时 3 秒，最多重试 1 次，避免阻塞</li>
+ *   <li>空回答时补问一次，仍计入 MAX_STEPS</li>
+ *   <li>只有正常形成最终回答后才写入 Memory，中间过程不保存</li>
+ * </ul>
+ * </p>
+ */
 @Service
 @Slf4j
 public class AgentRunner {
     /**
-     * 循环控制，Agent底层循环最大步数
+     * 循环控制：Agent 底层循环最大步数。
+     * 与 {@link ExecutionPolicy#MAX_TOOL_CALLS_PER_RUN} 解决的问题不同：
+     * 本常量限制模型循环次数，后者限制单次响应的工具调用总量。
      */
     private static final int MAX_STEPS = 6;
     /**
-     * Tool 调用超时时间
+     * 工具调用超时时间：防止单个工具阻塞整个 Agent 执行。
      */
     private static final Duration TOOL_TIMEOUT = Duration.ofSeconds(3);
     /**
-     * Tool 调用最大重试次数
+     * 工具调用最大重试次数：失败后最多重试一次。
      */
     private static final int TOOL_MAX_RETRIES = 1;
     private final ToolCallingManager toolCallingManager;

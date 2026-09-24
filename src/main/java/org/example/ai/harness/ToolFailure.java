@@ -16,7 +16,24 @@ import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 /**
- * 错误分类与恢复决策。仅 Harness 重试，HTTP Adapter 不再叠加重试。
+ * 工具失败分类与恢复决策：根据异常类型判断是否可重试、重试间隔等。
+ *
+ * <p>核心职责：
+ * <ul>
+ *   <li>沿异常 cause 链查找实际错误，分类为 {@link ToolErrorType}</li>
+ *   <li>判断是否可重试：超时、连接失败、限流（有 Retry-After）可重试；认证失败、策略拒绝不可重试</li>
+ *   <li>计算重试间隔：限流时解析 Retry-After 头，支持秒数和 HTTP-date 格式</li>
+ *   <li>生成对模型友好的观察结果：不泄露异常原文、响应体、URL 或凭据</li>
+ * </ul>
+ * </p>
+ *
+ * <p>设计要点：
+ * <ul>
+ *   <li>仅 Harness 重试，HTTP Adapter 不再叠加重试，避免重试风暴</li>
+ *   <li>Retry-After 超过 3 秒时放弃重试，防止无限挂起</li>
+ *   <li>观察结果明确标记 {@code dataAvailable=false}，防止模型误认为零值或健康</li>
+ * </ul>
+ * </p>
  */
 public record ToolFailure(ToolErrorType type, boolean retryable, Duration delay) {
     /**
@@ -24,6 +41,14 @@ public record ToolFailure(ToolErrorType type, boolean retryable, Duration delay)
      */
     private static final Duration MAX_RETRY_AFTER = Duration.ofSeconds(3);
 
+    /**
+     * 根据异常分类工具失败，返回错误类型、是否可重试和重试间隔。
+     *
+     * <p>沿 cause 链查找实际错误，优先级：策略拒绝 > 超时 > HTTP 状态码 > 连接失败。</p>
+     *
+     * @param failure 工具执行抛出的异常
+     * @return 失败分类结果
+     */
     public static ToolFailure classify(Throwable failure) {
         Set<Throwable> visited = Collections.newSetFromMap(new IdentityHashMap<>());
         ToolFailure fallback = of(ToolErrorType.UNKNOWN, false);

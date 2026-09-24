@@ -2,7 +2,7 @@ package org.example.ai;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.example.ai.rag.KnowledgeLoader;
+import org.example.ai.rag.synchronize.KnowledgeLoader;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 

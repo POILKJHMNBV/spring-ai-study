@@ -1,4 +1,4 @@
-package org.example.ai.rag;
+package org.example.ai.rag.synchronize;
 
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;

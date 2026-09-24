@@ -1,6 +1,8 @@
 package org.example.ai.rag;
 
 import com.sun.net.httpserver.HttpServer;
+import org.example.ai.rag.synchronize.KnowledgeLoader;
+import org.example.ai.rag.synchronize.PgKnowledgeIndex;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import tools.jackson.databind.json.JsonMapper;

@@ -1,5 +1,6 @@
 package org.example.ai.rag;
 
+import org.example.ai.rag.rerank.LexicalRrfRanker;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.tokenizer.JTokkitTokenCountEstimator;

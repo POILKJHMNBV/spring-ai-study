@@ -1,5 +1,6 @@
 package org.example.ai.rag;
 
+import org.example.ai.rag.rerank.LexicalRrfRanker;
 import org.example.ai.rag.rerank.TokenCoverageReranker;
 import org.example.ai.rag.rerank.DocumentReranker;
 import org.junit.jupiter.api.Test;

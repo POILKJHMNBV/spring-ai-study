@@ -13,6 +13,26 @@ import reactor.core.publisher.Flux;
 
 import java.util.Objects;
 
+/**
+ * 简单对话服务：基于 Spring AI ChatClient 的单轮对话实现。
+ *
+ * <p>与 {@link org.example.ai.harness.AgentRunner} 的区别：
+ * <ul>
+ *   <li>本服务使用 ChatClient 的声明式 API，适合简单问答场景</li>
+ *   <li>AgentRunner 使用底层 ChatModel + 手动循环，适合复杂的多步推理场景</li>
+ * </ul>
+ * </p>
+ *
+ * <p>核心职责：
+ * <ul>
+ *   <li>会话 ID 校验：防止日志注入或路径遍历</li>
+ *   <li>敏感信息脱敏：用户输入中的 Token/API Key 在发送给模型前先脱敏</li>
+ *   <li>工具注册：将 {@link OpsTools} 注册为可用工具</li>
+ *   <li>会话记忆：通过 Memory Advisor 自动加载历史消息</li>
+ *   <li>用量统计：记录每次 LLM 调用的 Token 用量和耗时</li>
+ * </ul>
+ * </p>
+ */
 @Service
 @Slf4j
 public class ChatService {

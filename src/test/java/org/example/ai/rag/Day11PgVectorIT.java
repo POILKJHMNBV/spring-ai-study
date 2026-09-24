@@ -1,6 +1,7 @@
 package org.example.ai.rag;
 
 import org.example.ai.SpringAiStudyApplication;
+import org.example.ai.rag.synchronize.PgKnowledgeIndex;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;

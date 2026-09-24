@@ -10,11 +10,24 @@ import org.example.ai.tool.mock.OpsMockDataProvider;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
+/**
+ * 聊天控制器：提供 HTTP 接口供前端或测试工具调用。
+ *
+ * <p>接口说明：
+ * <ul>
+ *   <li>{@code GET /ai/chat} — 简单对话，使用 {@link ChatService} 的声明式 API</li>
+ *   <li>{@code GET /ai/agent} — Agent 对话，使用 {@link AgentRunner} 的多步推理能力</li>
+ *   <li>{@code GET /ai/eval} — 评测接口，支持切换 Mock 场景，用于 Day6 评测</li>
+ *   <li>{@code DELETE /ai/memory/{conversationId]] — 清空指定会话的短期 Memory</li>
+ *   <li>{@code GET /ai/stream/chat} — 流式对话（未实现）</li>
+ * </ul>
+ * </p>
+ */
 @RestController
 @RequestMapping("/ai")
 public class ChatController {
 
-    private final ChatService chatService; // Constructor injection
+    private final ChatService chatService;
     private final AgentRunner agentRunner;
     private final OpsMockDataProvider opsMockDataProvider;
 

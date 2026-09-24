@@ -1,10 +1,26 @@
 package org.example.ai.common;
 
 /**
- * 常量
+ * 全局常量，集中管理跨模块共享的固定值。
+ *
+ * <p>采用 interface 而非 class，避免实例化；所有字段隐式为 {@code public static final}。</p>
  */
 public interface Constants {
 
+    /**
+     * LLM 系统提示词：定义故障排查助手的角色、可用工具和行为规范。
+     *
+     * <p>核心规则：
+     * <ul>
+     *   <li>工具结果（Tool Result）是实时事实的唯一来源，禁止编造数据</li>
+     *   <li>知识库（Knowledge）只提供通用排查指南，不代表当前环境一定发生该故障</li>
+     *   <li>先收集事实，再结合知识判断根因；每轮必须重新查询工具，历史数值不能作为实时证据</li>
+     *   <li>引用知识时必须指定实际提供的 source，未检索到知识时明确说明</li>
+     *   <li>指代消解必须有明确先行实体，禁止猜测</li>
+     *   <li>最终结论必须区分已观察事实、根因判断、知识依据、待验证项和下一步建议</li>
+     * </ul>
+     * </p>
+     */
     String SYSTEM_PROMPT = """
         你是一名 Java 生产故障排查助手。
 

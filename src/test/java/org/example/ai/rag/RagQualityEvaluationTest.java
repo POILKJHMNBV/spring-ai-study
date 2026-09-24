@@ -1,5 +1,6 @@
 package org.example.ai.rag;
 
+import org.example.ai.rag.rerank.LexicalRrfRanker;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.springframework.beans.factory.annotation.Autowired;

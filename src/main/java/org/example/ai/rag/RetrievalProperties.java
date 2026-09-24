@@ -5,21 +5,34 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.boot.context.properties.bind.ConstructorBinding;
 
 /**
- * HTTP 与内部调用共用默认 topK、向量阈值和排序模式。
- * mode 默认 HYBRID；Day12 实测重排存在来源覆盖退化，因此保留原默认模式。
+ * RAG 检索配置，绑定 {@code rag.retrieval.*} 配置项。
+ *
+ * <p>HTTP 接口与内部调用共用这套默认值，保证调试、评测和生产行为一致。
+ * 配置在 Spring 启动时即校验，避免错误参数延迟到检索请求才暴露。</p>
+ *
+ * <p>默认值说明：
+ * <ul>
+ *   <li>{@code topK = 3}：返回前 3 条结果，平衡上下文长度和信息量</li>
+ *   <li>{@code threshold = 0.47}：向量相似度阈值，低于此值的候选会被过滤</li>
+ *   <li>{@code mode = HYBRID}：默认使用混合排序；Day12 实测重排存在来源覆盖退化，因此保留原默认模式</li>
+ * </ul>
+ * </p>
  */
 @ConfigurationProperties("rag.retrieval")
 public record RetrievalProperties(@DefaultValue("3") int topK,
                                   @DefaultValue("0.47") double threshold,
                                   @DefaultValue("HYBRID") RetrievalMode mode) {
-    /** 配置加载时即验证边界，避免错误参数延迟到检索请求才暴露。 */
+    /**
+     * 配置加载时即验证边界，避免错误参数延迟到检索请求才暴露。
+     * 由 Spring Boot 在绑定配置时自动调用，无需手动触发。
+     */
     @ConstructorBinding
     public RetrievalProperties {
         validate("配置检查", topK, threshold);
         if (mode == null) throw new IllegalArgumentException("mode 不能为空");
     }
 
-    /** 兼容已有测试和手工创建检索器的两参数构造调用。 */
+    /** 兼容已有测试和手工创建检索器的两参数构造调用，默认使用 HYBRID 模式。 */
     public RetrievalProperties(int topK, double threshold) {
         this(topK, threshold, RetrievalMode.HYBRID);
     }

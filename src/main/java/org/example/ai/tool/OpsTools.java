@@ -16,11 +16,23 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Agent 可调用的四个只读运维 Tool。
+ * Agent 可调用的四个只读运维工具：服务指标、Kafka 状态、依赖指标、错误日志。
  *
- * <p>
- * Tool 定义保持稳定，具体 Mock 数据交给 OpsMockDataProvider。
- * 这样 Day6 可以切换场景，而不会污染 Tool Calling 本身。
+ * <p>设计原则：
+ * <ul>
+ *   <li>工具定义保持稳定，具体数据来源交给底层 Client（HTTP / Mock）</li>
+ *   <li>每个工具都有详细的 description，帮助 LLM 理解何时应该调用</li>
+ *   <li>所有工具都是只读的，不会修改生产环境状态</li>
+ * </ul>
+ * </p>
+ *
+ * <p>工具说明：
+ * <ul>
+ *   <li>{@link #getServiceStatus} — 查询服务自身的 CPU、内存、线程池等指标</li>
+ *   <li>{@link #getKafkaStatus} — 查询 Kafka Topic 的消费 Lag、生产/消费速率</li>
+ *   <li>{@link #getDependencyStatus} — 查询数据库 P99、连接池、下游 RPC 指标</li>
+ *   <li>{@link #queryErrorLogs} — 查询服务最近一段时间的错误日志摘要</li>
+ * </ul>
  * </p>
  */
 @Slf4j
@@ -28,12 +40,14 @@ import java.util.List;
 public class OpsTools {
     /**
      * Kafka LOCAL 模式仍然使用现有 Mock。
-     * MCP 模式下 AgentToolProvider 会把该 Tool 替换掉。
+     * MCP 模式下 {@link AgentToolProvider} 会把该工具替换为远程 MCP 实现。
      */
     private final OpsMockDataProvider dataProvider;
+    /** 服务指标来源：HTTP Adapter 或 Mock。 */
     private final ServiceMetricsClient serviceMetricsClient;
+    /** 日志查询来源：HTTP Adapter 或 Mock。 */
     private final LogQueryClient logQueryClient;
-    /** DB/RPC 指标来源，与工具 Schema 解耦。 */
+    /** DB/RPC 指标来源：HTTP Adapter 或 Mock，与工具 Schema 解耦。 */
     private final DependencyMetricsClient dependencyMetricsClient;
     public OpsTools(OpsMockDataProvider dataProvider, ServiceMetricsClient serviceMetricsClient, LogQueryClient logQueryClient,
                     DependencyMetricsClient dependencyMetricsClient) {
