@@ -3,6 +3,8 @@ package org.example.ai.harness;
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.example.ai.security.ConversationSecurity;
+import org.example.ai.observability.AgentTelemetry;
+import io.micrometer.observation.Observation;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.ToolCallback;
@@ -55,7 +57,10 @@ public class GuardedToolCallback implements ToolCallback {
     private final TraceRecorder trace;
     /** 当前步骤供应器：用于追踪记录。 */
     private final IntSupplier stepSupplier;
+    private final @Nullable AgentTelemetry telemetry;
+    private final boolean mcp;
 
+    /** 兼容既有调用方：仅启用原超时、重试与业务 Trace，不注册标准观测指标。 */
     public GuardedToolCallback(
             ToolCallback delegate,
             ExecutorService executor,
@@ -64,35 +69,75 @@ public class GuardedToolCallback implements ToolCallback {
             TraceRecorder trace,
             IntSupplier stepSupplier
     ) {
+        this(delegate, executor, timeout, maxRetries, trace, stepSupplier, null, false);
+    }
+
+    /** 兼容手工构建测试；默认视为本地工具。 */
+    public GuardedToolCallback(ToolCallback delegate, ExecutorService executor, Duration timeout,
+                               int maxRetries, TraceRecorder trace, IntSupplier stepSupplier,
+                               @Nullable AgentTelemetry telemetry) {
+        this(delegate, executor, timeout, maxRetries, trace, stepSupplier, telemetry, false);
+    }
+
+    /** 构建可观测工具；mcp 仅由已发现的远程 Kafka 回调指定。 */
+    public GuardedToolCallback(ToolCallback delegate, ExecutorService executor, Duration timeout,
+                               int maxRetries, TraceRecorder trace, IntSupplier stepSupplier,
+                               @Nullable AgentTelemetry telemetry, boolean mcp) {
         this.delegate = delegate;
         this.executor = executor;
         this.timeout = timeout;
         this.maxRetries = maxRetries;
         this.trace = trace;
         this.stepSupplier = stepSupplier;
+        this.telemetry = telemetry;
+        this.mcp = mcp && "getKafkaStatus".equals(delegate.getToolDefinition().name());
     }
 
+    /** 原样暴露委托工具的 Schema，避免观测包装影响模型工具选择和策略校验。 */
     @Override
     public ToolDefinition getToolDefinition() {
         return delegate.getToolDefinition();
     }
 
+    /** 透传返回策略等元数据，观测包装不改变工具执行契约。 */
     @Override
     public ToolMetadata getToolMetadata() {
         return delegate.getToolMetadata();
     }
 
+    /** 无额外上下文的工具入口，统一经过防护与观测。 */
     @Override
     public String call(String toolInput) {
         return execute(toolInput, null);
     }
 
+    /** 保留 Spring AI 提供的工具上下文，并在执行线程中恢复 Observation Scope。 */
     @Override
     public String call(String toolInput, @Nullable ToolContext toolContext) {
         return execute(toolInput, toolContext);
     }
 
+    /** 包围完整逻辑调用（包含重试等待），在所有退出路径记录一次指标并关闭观测。 */
     private String execute(String toolInput, @Nullable ToolContext toolContext) {
+        if (telemetry == null) {
+            return executeInternal(toolInput, toolContext, null);
+        }
+        Observation toolObservation = telemetry.start("tool.call");
+        long started = System.nanoTime();
+        String[] outcome = {"FAILED"};
+        try (Observation.Scope ignored = toolObservation.openScope()) {
+            return executeInternal(toolInput, toolContext, outcome);
+        } finally {
+            if (!"SUCCESS".equals(outcome[0])) {
+                toolObservation.error(new IllegalStateException("TOOL_FAILED"));
+            }
+            telemetry.toolFinished(outcome[0], System.nanoTime() - started, mcp);
+            toolObservation.stop();
+        }
+    }
+
+    /** 每次尝试在工作线程重新打开父 Observation 作用域，保证异步回调归入同一调用链。 */
+    private String executeInternal(String toolInput, @Nullable ToolContext toolContext, @Nullable String[] outcome) {
 
         String toolName = delegate.getToolDefinition().name();
 
@@ -100,10 +145,38 @@ public class GuardedToolCallback implements ToolCallback {
 
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
             long start = System.nanoTime();
-            Future<String> future =
-                    executor.submit(() -> toolContext == null ?
-                            delegate.call(toolInput) :
-                            delegate.call(toolInput, toolContext));
+            // 当前 Observation 在线程池中不会自动继承；显式捕获并恢复其作用域。
+            Observation parent = telemetry == null ? null : telemetry.start("tool.attempt");
+            Future<String> future;
+            try {
+                future = executor.submit(() -> {
+                    try (Observation.Scope ignored = parent == null ? null : parent.openScope()) {
+                        Observation remote = mcp && telemetry != null ? telemetry.start("mcp.call") : null;
+                        try (Observation.Scope remoteScope = remote == null ? null : remote.openScope()) {
+                            return toolContext == null ? delegate.call(toolInput) : delegate.call(toolInput, toolContext);
+                        } catch (RuntimeException error) {
+                            if (remote != null) {
+                                remote.error(new IllegalStateException("MCP_FAILED"));
+                            }
+                            throw error;
+                        } finally {
+                            if (remote != null) {
+                                remote.stop();
+                            }
+                        }
+                    }
+                });
+            } catch (RuntimeException rejected) {
+                if (parent != null) {
+                    parent.error(new IllegalStateException("SUBMISSION_FAILED"));
+                    parent.stop();
+                }
+                throw rejected;
+            }
+            // 只有再次提交成功才算重试；退避中断和提交失败不能增加重试次数。
+            if (attempt > 1 && telemetry != null) {
+                telemetry.retry();
+            }
 
             try {
 
@@ -128,10 +201,16 @@ public class GuardedToolCallback implements ToolCallback {
                         attempt,
                         "SUCCESS"
                 );
+                if (outcome != null) {
+                    outcome[0] = "SUCCESS";
+                }
 
                 return result;
             } catch (InterruptedException e) {
                 future.cancel(true);
+                if (parent != null) {
+                    parent.error(new IllegalStateException("INTERRUPTED"));
+                }
                 Thread.currentThread().interrupt();
                 trace.recordTool(stepSupplier.getAsInt(), toolName, toolInput,
                         ToolFailure.classify(e).observation(), elapsedMs(start), attempt, "INTERRUPTED");
@@ -139,6 +218,12 @@ public class GuardedToolCallback implements ToolCallback {
             } catch (TimeoutException | ExecutionException e) {
                 future.cancel(true);
                 ToolFailure failure = ToolFailure.classify(e);
+                if (parent != null) {
+                    parent.error(new IllegalStateException(failure.type().name()));
+                }
+                if (failure.type() == ToolErrorType.TIMEOUT && telemetry != null) {
+                    telemetry.timeout();
+                }
                 boolean retry = failure.retryable() && attempt < maxAttempts;
                 trace.recordTool(stepSupplier.getAsInt(), toolName, toolInput,
                         failure.observation(), elapsedMs(start), attempt,
@@ -155,12 +240,17 @@ public class GuardedToolCallback implements ToolCallback {
                             failure.observation(), elapsedMs(start), attempt, "RETRY_INTERRUPTED");
                     throw new IllegalStateException("Tool retry interrupted", interrupted);
                 }
+            } finally {
+                if (parent != null) {
+                    parent.stop();
+                }
             }
         }
         log.error("Unexpected tool execution state: {}", toolName);
         throw new IllegalStateException("Unexpected tool execution state");
     }
 
+    /** 使用单调时钟计算尝试耗时，避免系统时间调整干扰观测。 */
     private long elapsedMs(long start) {
         return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
     }

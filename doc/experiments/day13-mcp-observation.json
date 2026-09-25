@@ -1,0 +1,19 @@
+{
+  "suite" : "real-mcp-transport-without-llm",
+  "mcpCalls" : 1.0,
+  "traceId" : "70563e4f4df049be473e212ca9b8bdb3",
+  "mcpSpanId" : "7af23c55833fe20b",
+  "observationTree" : [ {
+    "name" : "mcp.call",
+    "parent" : "tool.attempt"
+  }, {
+    "name" : "tool.attempt",
+    "parent" : "tool.call"
+  }, {
+    "name" : "tool.call",
+    "parent" : "day13.mcp.it.root"
+  }, {
+    "name" : "day13.mcp.it.root",
+    "parent" : null
+  } ]
+}

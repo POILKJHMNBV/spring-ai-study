@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.ai.rag.RetrievedChunk;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.metadata.Usage;
+import org.springframework.ai.chat.metadata.EmptyUsage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.util.Assert;
 
@@ -95,6 +96,7 @@ public class TraceRecorder {
         ));
     }
 
+    /** 记录模型业务事件；缺少用量时保留 null，避免 EmptyUsage 的零值被误认作真实消耗。 */
     public void recordModel(
             int step,
             int contextMessageCount,
@@ -106,6 +108,8 @@ public class TraceRecorder {
         Assert.notNull(response.getResult(), "response.result must not be null");
 
         Usage usage = response.getMetadata().getUsage();
+        // Spring AI 的 EmptyUsage 表示未提供用量；不能把其 0 当作真实零 token。
+        boolean usageKnown = !(usage instanceof EmptyUsage);
         AssistantMessage output = response.getResult().getOutput();
         String resultSummary;
         if (output.hasToolCalls()) {
@@ -126,9 +130,9 @@ public class TraceRecorder {
                 "contextMessages=" + contextMessageCount,
                 resultSummary,
                 elapsedMs,
-                usage.getPromptTokens(),
-                usage.getCompletionTokens(),
-                usage.getTotalTokens(),
+                usageKnown ? usage.getPromptTokens() : null,
+                usageKnown ? usage.getCompletionTokens() : null,
+                usageKnown ? usage.getTotalTokens() : null,
                 "SUCCESS"
         ));
     }
@@ -220,23 +224,21 @@ public class TraceRecorder {
         ));
     }
 
+    /** 保存完整业务事件供返回值及 Eval 使用；运行日志只输出阶段、状态、耗时与 Token。 */
     private void add(TraceEvent event) {
 
         events.add(event);
 
         log.info(
-                "TRACE step={} type={} name={} status={} elapsed={}ms input={} output={} promptTokens={}, completionTokens={}, totalTokens={}, status={}",
+                "TRACE step={} type={} name={} status={} elapsed={}ms promptTokens={}, completionTokens={}, totalTokens={}",
                 event.step(),
                 event.type(),
                 event.name(),
                 event.status(),
                 event.elapsedMs(),
-                event.input(),
-                event.output(),
                 event.promptTokens(),
                 event.completionTokens(),
-                event.totalTokens(),
-                event.status()
+                event.totalTokens()
         );
     }
 

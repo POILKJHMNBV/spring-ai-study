@@ -674,10 +674,12 @@ Token
 
 ### 验收
 
-- [ ] 一次 Agent 请求能够串起完整 Trace；
-- [ ] 能定位最耗时的是 LLM、Tool 还是 Retrieval；
-- [ ] Metric 中不出现 API Key、原始敏感日志；
-- [ ] 能解释 `TraceRecorder` 与 Micrometer 的职责差异。
+- [x] 一次 Agent 请求能够串起完整 Trace（含线程池上下文与真实 MCP 客户端调用）；
+- [x] 能定位最耗时的是 LLM、Tool 还是 Retrieval（固定三例模型调用占比 99.33%）；
+- [x] Metric 中不出现 API Key、原始敏感日志（固定低基数标签，PGVector Span 移除查询正文）；
+- [x] 能解释 `TraceRecorder` 与 Micrometer 的职责差异。
+
+实现、官方依据、真实评测与子 Agent 验收见 [Day13 实验记录](experiments/day13-observability.md)。
 
 ---
 

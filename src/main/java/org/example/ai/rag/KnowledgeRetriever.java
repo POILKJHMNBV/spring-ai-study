@@ -1,6 +1,7 @@
 package org.example.ai.rag;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.ai.observability.AgentTelemetry;
 import org.example.ai.rag.rerank.DocumentReranker;
 import org.example.ai.rag.rerank.LexicalRrfRanker;
 import org.example.ai.rag.rerank.TokenCoverageReranker;
@@ -24,20 +25,28 @@ public class KnowledgeRetriever {
     private final RetrievalProperties properties;
     private final LexicalRrfRanker ranker;
     private final DocumentReranker reranker;
+    private final AgentTelemetry telemetry;
 
     /** 兼容已有手工构建；正式 Spring Bean 采用带重排器的构造器。 */
     public KnowledgeRetriever(VectorStore vectorStore, RetrievalProperties properties, LexicalRrfRanker ranker) {
-        this(vectorStore, properties, ranker, new TokenCoverageReranker());
+        this(vectorStore, properties, ranker, new TokenCoverageReranker(), null);
     }
 
     /** 注入同一个无外部服务的重排器，三个检索模式共用候选检索逻辑。 */
-    @Autowired
     public KnowledgeRetriever(VectorStore vectorStore, RetrievalProperties properties,
                               LexicalRrfRanker ranker, DocumentReranker reranker) {
+        this(vectorStore, properties, ranker, reranker, null);
+    }
+
+    /** Spring 注入统一观测组件，以真实候选数与最终命中数记录检索效果。 */
+    @Autowired
+    public KnowledgeRetriever(VectorStore vectorStore, RetrievalProperties properties,
+                              LexicalRrfRanker ranker, DocumentReranker reranker, AgentTelemetry telemetry) {
         this.vectorStore = vectorStore;
         this.properties = properties;
         this.ranker = ranker;
         this.reranker = reranker;
+        this.telemetry = telemetry;
     }
 
     /** 按配置模式、topK 和阈值执行生产检索。 */
@@ -78,11 +87,21 @@ public class KnowledgeRetriever {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         // 先搜索 20 个候选（固定窗口），再按模式排序、过滤、截取。
-        List<RetrievedChunk> chunks = rankCandidates(query, searchCandidates(query), mode, limit, cutoff);
+        List<Document> candidates;
+        List<RetrievedChunk> chunks;
+        try {
+            candidates = searchCandidates(query);
+            chunks = rankCandidates(query, candidates, mode, limit, cutoff);
+        } catch (RuntimeException error) {
+            stopWatch.stop();
+            if (telemetry != null) telemetry.retrievalFailed(stopWatch.getTotalTimeNanos());
+            throw error;
+        }
         stopWatch.stop();
-        // 汇总日志：将换行/制表符替换为空格，避免日志被截断或解析异常。
-        log.info("RAG mode={} query={} topK={} threshold={} hits={} elapsedMs={}",
-                mode, query.replaceAll("[\\r\\n\\t]", " "), limit, cutoff, chunks.size(),
+        if (telemetry != null) telemetry.retrievalFinished(stopWatch.getTotalTimeNanos(), candidates.size(), chunks.size());
+        // 汇总日志只输出配置和数量，不记录可能带凭据的查询正文。
+        log.info("RAG mode={} topK={} threshold={} hits={} elapsedMs={}",
+                mode, limit, cutoff, chunks.size(),
                 stopWatch.getTotalTimeMillis());
         // 逐条日志：记录每个结果的排名和元数据，便于排查检索质量。
         for (int i = 0; i < chunks.size(); i++) {

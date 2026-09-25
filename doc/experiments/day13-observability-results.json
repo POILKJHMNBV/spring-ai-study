@@ -1,0 +1,445 @@
+{
+  "suite" : "day13-real-pgvector-ollama",
+  "generatedAt" : "2026-09-25T02:57:12.016528100Z",
+  "chatModel" : "qwen3.5:9b",
+  "embeddingModel" : "bge-m3",
+  "totalCases" : 3,
+  "p50LatencyMs" : 10419,
+  "p95LatencyMs" : 11102,
+  "averageSteps" : 1.6666666666666667,
+  "averageToolCalls" : 2.0,
+  "failureRate" : 0.0,
+  "promptTokens" : 9456,
+  "completionTokens" : 2964,
+  "unknownUsageCalls" : 0,
+  "componentLatency" : {
+    "agent.latency" : {
+      "count" : 3,
+      "totalMs" : 31714.717799
+    },
+    "llm.request.latency" : {
+      "count" : 5,
+      "totalMs" : 31501.687299
+    },
+    "tool.latency" : {
+      "count" : 6,
+      "totalMs" : 13.177801
+    },
+    "rag.retrieve.latency" : {
+      "count" : 3,
+      "totalMs" : 123.7561
+    },
+    "mcp.latency" : {
+      "count" : 0,
+      "totalMs" : 0.0
+    }
+  },
+  "counters" : {
+    "agent.requests" : 3.0,
+    "agent.failures" : 0.0,
+    "agent.policy.rejects" : 0.0,
+    "tool.calls" : 6.0,
+    "tool.failures" : 0.0,
+    "tool.timeout" : 0.0,
+    "tool.retry" : 0.0,
+    "mcp.calls" : 0.0,
+    "mcp.failure" : 0.0,
+    "llm.usage.unknown" : 0.0,
+    "llm.prompt.tokens" : 9456.0,
+    "llm.completion.tokens" : 2964.0
+  },
+  "observationTree" : [ {
+    "name" : "tool.discovery",
+    "parent" : "agent.request"
+  }, {
+    "name" : "http.client.requests",
+    "parent" : "gen_ai.client.operation"
+  }, {
+    "name" : "gen_ai.client.operation",
+    "parent" : "db.vector.client.operation"
+  }, {
+    "name" : "db.vector.client.operation",
+    "parent" : "rag.retrieve"
+  }, {
+    "name" : "rag.retrieve",
+    "parent" : "agent.request"
+  }, {
+    "name" : "http.client.requests",
+    "parent" : "gen_ai.client.operation"
+  }, {
+    "name" : "gen_ai.client.operation",
+    "parent" : "llm.request"
+  }, {
+    "name" : "llm.request",
+    "parent" : "agent.request"
+  }, {
+    "name" : "agent.final",
+    "parent" : "agent.request"
+  }, {
+    "name" : "agent.request",
+    "parent" : null
+  }, {
+    "name" : "tool.discovery",
+    "parent" : "agent.request"
+  }, {
+    "name" : "http.client.requests",
+    "parent" : "gen_ai.client.operation"
+  }, {
+    "name" : "gen_ai.client.operation",
+    "parent" : "db.vector.client.operation"
+  }, {
+    "name" : "db.vector.client.operation",
+    "parent" : "rag.retrieve"
+  }, {
+    "name" : "rag.retrieve",
+    "parent" : "agent.request"
+  }, {
+    "name" : "http.client.requests",
+    "parent" : "gen_ai.client.operation"
+  }, {
+    "name" : "gen_ai.client.operation",
+    "parent" : "llm.request"
+  }, {
+    "name" : "llm.request",
+    "parent" : "agent.request"
+  }, {
+    "name" : "tool.attempt",
+    "parent" : "tool.call"
+  }, {
+    "name" : "tool.call",
+    "parent" : "spring.ai.tool"
+  }, {
+    "name" : "spring.ai.tool",
+    "parent" : "agent.request"
+  }, {
+    "name" : "tool.attempt",
+    "parent" : "tool.call"
+  }, {
+    "name" : "tool.call",
+    "parent" : "spring.ai.tool"
+  }, {
+    "name" : "spring.ai.tool",
+    "parent" : "agent.request"
+  }, {
+    "name" : "tool.attempt",
+    "parent" : "tool.call"
+  }, {
+    "name" : "tool.call",
+    "parent" : "spring.ai.tool"
+  }, {
+    "name" : "spring.ai.tool",
+    "parent" : "agent.request"
+  }, {
+    "name" : "tool.attempt",
+    "parent" : "tool.call"
+  }, {
+    "name" : "tool.call",
+    "parent" : "spring.ai.tool"
+  }, {
+    "name" : "spring.ai.tool",
+    "parent" : "agent.request"
+  }, {
+    "name" : "http.client.requests",
+    "parent" : "gen_ai.client.operation"
+  }, {
+    "name" : "gen_ai.client.operation",
+    "parent" : "llm.request"
+  }, {
+    "name" : "llm.request",
+    "parent" : "agent.request"
+  }, {
+    "name" : "agent.final",
+    "parent" : "agent.request"
+  }, {
+    "name" : "agent.request",
+    "parent" : null
+  }, {
+    "name" : "tool.discovery",
+    "parent" : "agent.request"
+  }, {
+    "name" : "http.client.requests",
+    "parent" : "gen_ai.client.operation"
+  }, {
+    "name" : "gen_ai.client.operation",
+    "parent" : "db.vector.client.operation"
+  }, {
+    "name" : "db.vector.client.operation",
+    "parent" : "rag.retrieve"
+  }, {
+    "name" : "rag.retrieve",
+    "parent" : "agent.request"
+  }, {
+    "name" : "http.client.requests",
+    "parent" : "gen_ai.client.operation"
+  }, {
+    "name" : "gen_ai.client.operation",
+    "parent" : "llm.request"
+  }, {
+    "name" : "llm.request",
+    "parent" : "agent.request"
+  }, {
+    "name" : "tool.attempt",
+    "parent" : "tool.call"
+  }, {
+    "name" : "tool.call",
+    "parent" : "spring.ai.tool"
+  }, {
+    "name" : "spring.ai.tool",
+    "parent" : "agent.request"
+  }, {
+    "name" : "tool.attempt",
+    "parent" : "tool.call"
+  }, {
+    "name" : "tool.call",
+    "parent" : "spring.ai.tool"
+  }, {
+    "name" : "spring.ai.tool",
+    "parent" : "agent.request"
+  }, {
+    "name" : "http.client.requests",
+    "parent" : "gen_ai.client.operation"
+  }, {
+    "name" : "gen_ai.client.operation",
+    "parent" : "llm.request"
+  }, {
+    "name" : "llm.request",
+    "parent" : "agent.request"
+  }, {
+    "name" : "agent.final",
+    "parent" : "agent.request"
+  }, {
+    "name" : "agent.request",
+    "parent" : null
+  } ],
+  "cases" : [ {
+    "id" : "D13-RAG",
+    "status" : "COMPLETED",
+    "elapsedMs" : 10193,
+    "steps" : 1,
+    "toolCalls" : 0,
+    "promptTokens" : 1852,
+    "completionTokens" : 621,
+    "unknownUsageCalls" : 0,
+    "trace" : [ {
+      "step" : 0,
+      "type" : "RAG",
+      "name" : "thread-pool-exhaustion.md",
+      "status" : "HIT",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null
+    }, {
+      "step" : 0,
+      "type" : "RAG",
+      "name" : "thread-pool-exhaustion.md",
+      "status" : "HIT",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null
+    }, {
+      "step" : 0,
+      "type" : "RAG",
+      "name" : "thread-pool-exhaustion.md",
+      "status" : "HIT",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null
+    }, {
+      "step" : 1,
+      "type" : "MODEL",
+      "name" : "chatModel.call",
+      "status" : "SUCCESS",
+      "elapsedMs" : 10084,
+      "promptTokens" : 1852,
+      "completionTokens" : 621
+    }, {
+      "step" : 1,
+      "type" : "STOP",
+      "name" : "AgentRunner",
+      "status" : "STOP",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null
+    } ]
+  }, {
+    "id" : "D13-TOOL",
+    "status" : "COMPLETED",
+    "elapsedMs" : 11102,
+    "steps" : 2,
+    "toolCalls" : 4,
+    "promptTokens" : 3881,
+    "completionTokens" : 1212,
+    "unknownUsageCalls" : 0,
+    "trace" : [ {
+      "step" : 0,
+      "type" : "RAG",
+      "name" : "kafka-consumer-lag.md",
+      "status" : "HIT",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null
+    }, {
+      "step" : 0,
+      "type" : "RAG",
+      "name" : "kafka-consumer-lag.md",
+      "status" : "HIT",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null
+    }, {
+      "step" : 0,
+      "type" : "RAG",
+      "name" : "kafka-consumer-lag.md",
+      "status" : "HIT",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null
+    }, {
+      "step" : 1,
+      "type" : "MODEL",
+      "name" : "chatModel.call",
+      "status" : "SUCCESS",
+      "elapsedMs" : 2772,
+      "promptTokens" : 1785,
+      "completionTokens" : 288
+    }, {
+      "step" : 1,
+      "type" : "TOOL",
+      "name" : "getKafkaStatus",
+      "status" : "SUCCESS, attempt=1",
+      "elapsedMs" : 4,
+      "promptTokens" : null,
+      "completionTokens" : null
+    }, {
+      "step" : 1,
+      "type" : "TOOL",
+      "name" : "getServiceStatus",
+      "status" : "SUCCESS, attempt=1",
+      "elapsedMs" : 1,
+      "promptTokens" : null,
+      "completionTokens" : null
+    }, {
+      "step" : 1,
+      "type" : "TOOL",
+      "name" : "getDependencyStatus",
+      "status" : "SUCCESS, attempt=1",
+      "elapsedMs" : 2,
+      "promptTokens" : null,
+      "completionTokens" : null
+    }, {
+      "step" : 1,
+      "type" : "TOOL",
+      "name" : "queryErrorLogs",
+      "status" : "SUCCESS, attempt=1",
+      "elapsedMs" : 1,
+      "promptTokens" : null,
+      "completionTokens" : null
+    }, {
+      "step" : 1,
+      "type" : "CONTEXT",
+      "name" : "conversationHistory",
+      "status" : "UPDATED",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null
+    }, {
+      "step" : 2,
+      "type" : "MODEL",
+      "name" : "chatModel.call",
+      "status" : "SUCCESS",
+      "elapsedMs" : 8264,
+      "promptTokens" : 2096,
+      "completionTokens" : 924
+    }, {
+      "step" : 2,
+      "type" : "STOP",
+      "name" : "AgentRunner",
+      "status" : "STOP",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null
+    } ]
+  }, {
+    "id" : "D13-DB",
+    "status" : "COMPLETED",
+    "elapsedMs" : 10419,
+    "steps" : 2,
+    "toolCalls" : 2,
+    "promptTokens" : 3723,
+    "completionTokens" : 1131,
+    "unknownUsageCalls" : 0,
+    "trace" : [ {
+      "step" : 0,
+      "type" : "RAG",
+      "name" : "mysql-slow-query.md",
+      "status" : "HIT",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null
+    }, {
+      "step" : 0,
+      "type" : "RAG",
+      "name" : "mysql-slow-query.md",
+      "status" : "HIT",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null
+    }, {
+      "step" : 0,
+      "type" : "RAG",
+      "name" : "mysql-slow-query.md",
+      "status" : "HIT",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null
+    }, {
+      "step" : 1,
+      "type" : "MODEL",
+      "name" : "chatModel.call",
+      "status" : "SUCCESS",
+      "elapsedMs" : 2505,
+      "promptTokens" : 1772,
+      "completionTokens" : 251
+    }, {
+      "step" : 1,
+      "type" : "TOOL",
+      "name" : "getDependencyStatus",
+      "status" : "SUCCESS, attempt=1",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null
+    }, {
+      "step" : 1,
+      "type" : "TOOL",
+      "name" : "getServiceStatus",
+      "status" : "SUCCESS, attempt=1",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null
+    }, {
+      "step" : 1,
+      "type" : "CONTEXT",
+      "name" : "conversationHistory",
+      "status" : "UPDATED",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null
+    }, {
+      "step" : 2,
+      "type" : "MODEL",
+      "name" : "chatModel.call",
+      "status" : "SUCCESS",
+      "elapsedMs" : 7874,
+      "promptTokens" : 1951,
+      "completionTokens" : 880
+    }, {
+      "step" : 2,
+      "type" : "STOP",
+      "name" : "AgentRunner",
+      "status" : "STOP",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null
+    } ]
+  } ]
+}

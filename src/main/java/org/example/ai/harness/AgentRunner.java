@@ -2,6 +2,10 @@ package org.example.ai.harness;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.ai.rag.KnowledgeRetriever;
+import org.example.ai.observability.AgentTelemetry;
+import io.micrometer.observation.Observation;
+import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.PreDestroy;
 import org.example.ai.rag.RetrievedChunk;
 import org.example.ai.security.ConversationSecurity;
 import org.example.ai.tool.AgentToolProvider;
@@ -83,8 +87,19 @@ public class AgentRunner {
     private final KnowledgeRetriever knowledgeRetriever;
     private final ChatMemory chatMemory;
     private final ExecutorService toolExecutor;
+    private final AgentTelemetry telemetry;
+    /** 兼容旧的手工装配入口；未传入观测组件时保留原业务行为。 */
     public AgentRunner(ToolCallingManager toolCallingManager, AgentToolProvider agentToolProvider, ChatModel chatModel,
                        ExecutionPolicy executionPolicy, KnowledgeRetriever knowledgeRetriever, ChatMemory chatMemory) {
+        this(toolCallingManager, agentToolProvider, chatModel, executionPolicy, knowledgeRetriever, chatMemory, null);
+    }
+
+    /** Spring 注入统一指标与追踪组件；保留旧构造器供独立测试使用。 */
+    @Autowired
+    public AgentRunner(ToolCallingManager toolCallingManager, AgentToolProvider agentToolProvider, ChatModel chatModel,
+                       ExecutionPolicy executionPolicy, KnowledgeRetriever knowledgeRetriever, ChatMemory chatMemory,
+                       AgentTelemetry telemetry) {
+        this.telemetry = telemetry;
         this.toolCallingManager = toolCallingManager;
         this.agentToolProvider = agentToolProvider;
         this.chatModel = chatModel;
@@ -121,6 +136,33 @@ public class AgentRunner {
      * @param kafkaToolMode  Kafka Tool 的接入方式
      */
     public AgentRunResult run(String userPrompt, String conversationId, boolean memoryEnabled, KafkaToolMode kafkaToolMode) {
+        if (telemetry == null) {
+            return runInternal(userPrompt, conversationId, memoryEnabled, kafkaToolMode);
+        }
+        long started = System.nanoTime();
+        Observation request = telemetry.start("agent.request");
+        AgentRunResult result = null;
+        try (Observation.Scope ignored = request.openScope()) {
+            result = runInternal(userPrompt, conversationId, memoryEnabled, kafkaToolMode);
+            if (result.status() != AgentRunResult.RunStatus.COMPLETED) {
+                // 受控失败也标记 Trace；只使用固定状态，避免异常消息进入 Span。
+                request.error(new IllegalStateException(result.status().name()));
+            }
+            Observation finalResponse = telemetry.start("agent.final");
+            finalResponse.stop();
+            return result;
+        } catch (RuntimeException error) {
+            request.error(new IllegalStateException("AGENT_FAILED"));
+            throw error;
+        } finally {
+            telemetry.agentFinished(result == null ? "FAILED" : result.status().name(),
+                    result == null ? 0 : result.completedSteps(), System.nanoTime() - started);
+            request.stop();
+        }
+    }
+
+    /** 原有 Agent 决策过程；外围 Observation 只观察结果，不改变决策。 */
+    private AgentRunResult runInternal(String userPrompt, String conversationId, boolean memoryEnabled, KafkaToolMode kafkaToolMode) {
         String safeConversationId = ConversationSecurity.requireValidConversationId(conversationId);
 
         TraceRecorder trace = new TraceRecorder();
@@ -142,7 +184,22 @@ public class AgentRunner {
         ToolCallback[] toolCallbacks;
 
         try {
-            toolCallbacks = agentToolProvider.getToolCallbacks(kafkaToolMode);
+            Observation discovery = telemetry == null ? null : telemetry.start("tool.discovery");
+            try (Observation.Scope ignored = discovery == null ? null : discovery.openScope()) {
+                toolCallbacks = agentToolProvider.getToolCallbacks(kafkaToolMode);
+            } catch (RuntimeException error) {
+                if (discovery != null) {
+                    discovery.error(new IllegalStateException("DISCOVERY_FAILED"));
+                }
+                if (telemetry != null && kafkaToolMode == KafkaToolMode.MCP) {
+                    telemetry.mcpDiscoveryFailed();
+                }
+                throw error;
+            } finally {
+                if (discovery != null) {
+                    discovery.stop();
+                }
+            }
         } catch (RuntimeException e) {
 
             /*
@@ -170,7 +227,9 @@ public class AgentRunner {
                                         TOOL_TIMEOUT,
                                         TOOL_MAX_RETRIES,
                                         trace,
-                                        currentStep::get
+                                        currentStep::get,
+                                        telemetry,
+                                        kafkaToolMode == KafkaToolMode.MCP
                                 )
                         )
                         .toArray(ToolCallback[]::new);
@@ -186,7 +245,20 @@ public class AgentRunner {
                 .build();
 
         // RAG
-        List<RetrievedChunk> retrievedChunks = knowledgeRetriever.retrieve(userPrompt);
+        Observation retrieval = telemetry == null ? null : telemetry.start("rag.retrieve");
+        List<RetrievedChunk> retrievedChunks;
+        try (Observation.Scope ignored = retrieval == null ? null : retrieval.openScope()) {
+            retrievedChunks = knowledgeRetriever.retrieve(userPrompt);
+        } catch (RuntimeException error) {
+            if (retrieval != null) {
+                retrieval.error(new IllegalStateException("RETRIEVAL_FAILED"));
+            }
+            throw error;
+        } finally {
+            if (retrieval != null) {
+                retrieval.stop();
+            }
+        }
         for (int i = 0, n = retrievedChunks.size(); i < n; i++) {
             trace.recordRag(i + 1, retrievedChunks.get(i));
         }
@@ -216,10 +288,18 @@ public class AgentRunner {
             // A. LLM 决策
             StopWatch stopWatch = new StopWatch();
             ChatResponse response;
-            try {
+            Observation modelObservation = telemetry == null ? null : telemetry.start("llm.request");
+            long modelStarted = System.nanoTime();
+            try (Observation.Scope ignored = modelObservation == null ? null : modelObservation.openScope()) {
                 stopWatch.start();
                 response = chatModel.call(prompt);
             } catch (Exception e) {
+                if (modelObservation != null) {
+                    modelObservation.error(new IllegalStateException("MODEL_FAILED"));
+                }
+                if (telemetry != null) {
+                    telemetry.modelFinished(System.nanoTime() - modelStarted, null);
+                }
                 log.error("LLM call failed:", e);
                 trace.recordStop(step, "LLM call failed: " + e.getMessage());
                 return new AgentRunResult(
@@ -228,8 +308,13 @@ public class AgentRunner {
                         step,
                         trace.snapshot()
                 );
+            } finally {
+                if (modelObservation != null) modelObservation.stop();
             }
             stopWatch.stop();
+            if (telemetry != null) {
+                telemetry.modelFinished(System.nanoTime() - modelStarted, response.getMetadata().getUsage());
+            }
 
             Generation responseResult = response.getResult();
             if (Objects.isNull(responseResult)) {
@@ -416,5 +501,11 @@ public class AgentRunner {
 
     public void clearMemory(String conversationId) {
         chatMemory.clear(conversationId);
+    }
+
+    /** 应用上下文关闭时停止专用线程池，避免测试和服务退出后残留工具线程。 */
+    @PreDestroy
+    public void shutdownToolExecutor() {
+        toolExecutor.shutdownNow();
     }
 }

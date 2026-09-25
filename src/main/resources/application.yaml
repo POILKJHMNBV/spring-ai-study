@@ -8,6 +8,19 @@ spring:
   profiles:
     active: mcp
   ai:
+    # Day13：标准耗时与 Token 指标不需要记录用户问题、回答或工具正文。
+    chat:
+      observations:
+        log-prompt: false
+        log-completion: false
+        include-error-logging: false
+      client:
+        observations:
+          log-prompt: false
+          log-completion: false
+    tools:
+      observations:
+        include-content: false
     ollama:
       chat:
         model: qwen3.5:9b
@@ -19,6 +32,8 @@ spring:
         # 禁止静默截断，超长文档必须定位到小节后重新切分。
         truncate: false
     vectorstore:
+      observations:
+        log-query-response: false
       pgvector:
         initialize-schema: true
         # BGE-M3 输出 1024 维；显式配置避免重启时为推断维度调用 Embedding。
@@ -43,6 +58,24 @@ rag:
 logging:
   level:
     org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: info
+
+# Day13：仅开放指标端点；直方图用于固定 Eval 的 P50/P95。
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+  tracing:
+    sampling:
+      probability: 1.0
+  metrics:
+    distribution:
+      percentiles-histogram:
+        agent.latency: true
+        llm.request.latency: true
+        tool.latency: true
+        rag.retrieve.latency: true
+        mcp.latency: true
 
 app:
   ops:
