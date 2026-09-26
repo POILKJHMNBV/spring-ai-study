@@ -1,16 +1,14 @@
 package org.example.ai.harness;
 
-import lombok.extern.slf4j.Slf4j;
-import org.example.ai.rag.KnowledgeRetriever;
-import org.example.ai.observability.AgentTelemetry;
 import io.micrometer.observation.Observation;
-import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.annotation.PreDestroy;
+import lombok.extern.slf4j.Slf4j;
+import org.example.ai.observability.AgentTelemetry;
+import org.example.ai.rag.KnowledgeRetriever;
 import org.example.ai.rag.RetrievedChunk;
 import org.example.ai.security.ConversationSecurity;
 import org.example.ai.tool.AgentToolProvider;
 import org.example.ai.tool.KafkaToolMode;
-import org.example.ai.tool.OpsTools;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
@@ -23,8 +21,8 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.model.tool.ToolExecutionResult;
 import org.springframework.ai.ollama.api.OllamaChatOptions;
-import org.springframework.ai.support.ToolCallbacks;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
@@ -37,7 +35,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.example.ai.common.Constants.SYSTEM_PROMPT;
+import static org.example.ai.common.Constants.*;
 
 
 /**
@@ -140,7 +138,7 @@ public class AgentRunner {
             return runInternal(userPrompt, conversationId, memoryEnabled, kafkaToolMode);
         }
         long started = System.nanoTime();
-        Observation request = telemetry.start("agent.request");
+        Observation request = telemetry.start(OBSERVATION_AGENT_REQUEST);
         AgentRunResult result = null;
         try (Observation.Scope ignored = request.openScope()) {
             result = runInternal(userPrompt, conversationId, memoryEnabled, kafkaToolMode);
@@ -148,14 +146,19 @@ public class AgentRunner {
                 // 受控失败也标记 Trace；只使用固定状态，避免异常消息进入 Span。
                 request.error(new IllegalStateException(result.status().name()));
             }
-            Observation finalResponse = telemetry.start("agent.final");
+            Observation finalResponse = telemetry.start(OBSERVATION_AGENT_FINAL);
             finalResponse.stop();
             return result;
-        } catch (RuntimeException error) {
-            request.error(new IllegalStateException("AGENT_FAILED"));
-            throw error;
+        } catch (RuntimeException e) {
+            request.error(new IllegalStateException(OBSERVATION_ERROR_AGENT_FAILED));
+            log.error("Agent run failed:", e);
+            return new AgentRunResult(
+                    AgentRunResult.RunStatus.FAILED,
+                    "系统服务异常：" + e.getMessage(),
+                    0,
+                    null);
         } finally {
-            telemetry.agentFinished(result == null ? "FAILED" : result.status().name(),
+            telemetry.agentFinished(result == null ? TELEMETRY_AGENT_STATUS_FAILED : result.status().name(),
                     result == null ? 0 : result.completedSteps(), System.nanoTime() - started);
             request.stop();
         }
@@ -182,26 +185,16 @@ public class AgentRunner {
          * getKafkaStatus 来自远程 MCP Server。
          */
         ToolCallback[] toolCallbacks;
-
-        try {
-            Observation discovery = telemetry == null ? null : telemetry.start("tool.discovery");
-            try (Observation.Scope ignored = discovery == null ? null : discovery.openScope()) {
-                toolCallbacks = agentToolProvider.getToolCallbacks(kafkaToolMode);
-            } catch (RuntimeException error) {
-                if (discovery != null) {
-                    discovery.error(new IllegalStateException("DISCOVERY_FAILED"));
-                }
-                if (telemetry != null && kafkaToolMode == KafkaToolMode.MCP) {
-                    telemetry.mcpDiscoveryFailed();
-                }
-                throw error;
-            } finally {
-                if (discovery != null) {
-                    discovery.stop();
-                }
-            }
+        Observation discovery = telemetry == null ? null : telemetry.start(OBSERVATION_TOOL_DISCOVERY);
+        try (Observation.Scope ignored = discovery == null ? null : discovery.openScope()) {
+            toolCallbacks = agentToolProvider.getToolCallbacks(kafkaToolMode);
         } catch (RuntimeException e) {
-
+            if (discovery != null) {
+                discovery.error(new IllegalStateException(OBSERVATION_ERROR_DISCOVERY_FAILED));
+            }
+            if (telemetry != null && kafkaToolMode == KafkaToolMode.MCP) {
+                telemetry.mcpDiscoveryFailed();
+            }
             /*
              * MCP Tool discovery 失败也必须形成
              * Harness 可观察的受控结果，
@@ -212,9 +205,13 @@ public class AgentRunner {
             return new AgentRunResult(
                     AgentRunResult.RunStatus.FAILED,
                     "工具发现失败：" + e.getMessage(),
-                    0,
+                    currentStep.get(),
                     trace.snapshot()
             );
+        } finally {
+            if (discovery != null) {
+                discovery.stop();
+            }
         }
 
         // 在 Tool 外面增加：timeout + retry + trace
@@ -245,15 +242,21 @@ public class AgentRunner {
                 .build();
 
         // RAG
-        Observation retrieval = telemetry == null ? null : telemetry.start("rag.retrieve");
+        Observation retrieval = telemetry == null ? null : telemetry.start(OBSERVATION_RAG_RETRIEVE);
         List<RetrievedChunk> retrievedChunks;
         try (Observation.Scope ignored = retrieval == null ? null : retrieval.openScope()) {
             retrievedChunks = knowledgeRetriever.retrieve(userPrompt);
-        } catch (RuntimeException error) {
+        } catch (RuntimeException e) {
             if (retrieval != null) {
-                retrieval.error(new IllegalStateException("RETRIEVAL_FAILED"));
+                retrieval.error(new IllegalStateException(OBSERVATION_ERROR_RETRIEVAL_FAILED));
             }
-            throw error;
+            trace.recordStop(0, "Retrieval failed: " + e.getMessage());
+            log.error("Retrieval failed:", e);
+            return new AgentRunResult(
+                    AgentRunResult.RunStatus.FAILED,
+                    "检索失败：" + e.getMessage(),
+                    currentStep.get(),
+                    trace.snapshot());
         } finally {
             if (retrieval != null) {
                 retrieval.stop();
@@ -288,14 +291,14 @@ public class AgentRunner {
             // A. LLM 决策
             StopWatch stopWatch = new StopWatch();
             ChatResponse response;
-            Observation modelObservation = telemetry == null ? null : telemetry.start("llm.request");
+            Observation modelObservation = telemetry == null ? null : telemetry.start(OBSERVATION_LLM_REQUEST);
             long modelStarted = System.nanoTime();
             try (Observation.Scope ignored = modelObservation == null ? null : modelObservation.openScope()) {
                 stopWatch.start();
                 response = chatModel.call(prompt);
             } catch (Exception e) {
                 if (modelObservation != null) {
-                    modelObservation.error(new IllegalStateException("MODEL_FAILED"));
+                    modelObservation.error(new IllegalStateException(OBSERVATION_ERROR_MODEL_FAILED));
                 }
                 if (telemetry != null) {
                     telemetry.modelFinished(System.nanoTime() - modelStarted, null);

@@ -15,6 +15,16 @@ import java.time.Duration;
 import java.util.concurrent.*;
 import java.util.function.IntSupplier;
 
+import static org.example.ai.common.Constants.OBSERVATION_TOOL_CALL;
+import static org.example.ai.common.Constants.OBSERVATION_TOOL_ATTEMPT;
+import static org.example.ai.common.Constants.OBSERVATION_MCP_CALL;
+import static org.example.ai.common.Constants.TELEMETRY_TOOL_OUTCOME_FAILED;
+import static org.example.ai.common.Constants.TELEMETRY_TOOL_OUTCOME_SUCCESS;
+import static org.example.ai.common.Constants.OBSERVATION_ERROR_TOOL_FAILED;
+import static org.example.ai.common.Constants.OBSERVATION_ERROR_MCP_FAILED;
+import static org.example.ai.common.Constants.OBSERVATION_ERROR_SUBMISSION_FAILED;
+import static org.example.ai.common.Constants.OBSERVATION_ERROR_INTERRUPTED;
+
 /**
  * 工具回调防护包装器：为原始 {@link ToolCallback} 添加超时、重试、脱敏和截断能力。
  *
@@ -122,14 +132,14 @@ public class GuardedToolCallback implements ToolCallback {
         if (telemetry == null) {
             return executeInternal(toolInput, toolContext, null);
         }
-        Observation toolObservation = telemetry.start("tool.call");
+        Observation toolObservation = telemetry.start(OBSERVATION_TOOL_CALL);
         long started = System.nanoTime();
-        String[] outcome = {"FAILED"};
+        String[] outcome = {TELEMETRY_TOOL_OUTCOME_FAILED};
         try (Observation.Scope ignored = toolObservation.openScope()) {
             return executeInternal(toolInput, toolContext, outcome);
         } finally {
-            if (!"SUCCESS".equals(outcome[0])) {
-                toolObservation.error(new IllegalStateException("TOOL_FAILED"));
+            if (!TELEMETRY_TOOL_OUTCOME_SUCCESS.equals(outcome[0])) {
+                toolObservation.error(new IllegalStateException(OBSERVATION_ERROR_TOOL_FAILED));
             }
             telemetry.toolFinished(outcome[0], System.nanoTime() - started, mcp);
             toolObservation.stop();
@@ -146,17 +156,17 @@ public class GuardedToolCallback implements ToolCallback {
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
             long start = System.nanoTime();
             // 当前 Observation 在线程池中不会自动继承；显式捕获并恢复其作用域。
-            Observation parent = telemetry == null ? null : telemetry.start("tool.attempt");
+            Observation parent = telemetry == null ? null : telemetry.start(OBSERVATION_TOOL_ATTEMPT);
             Future<String> future;
             try {
                 future = executor.submit(() -> {
                     try (Observation.Scope ignored = parent == null ? null : parent.openScope()) {
-                        Observation remote = mcp && telemetry != null ? telemetry.start("mcp.call") : null;
+                        Observation remote = mcp && telemetry != null ? telemetry.start(OBSERVATION_MCP_CALL) : null;
                         try (Observation.Scope remoteScope = remote == null ? null : remote.openScope()) {
                             return toolContext == null ? delegate.call(toolInput) : delegate.call(toolInput, toolContext);
                         } catch (RuntimeException error) {
                             if (remote != null) {
-                                remote.error(new IllegalStateException("MCP_FAILED"));
+                                remote.error(new IllegalStateException(OBSERVATION_ERROR_MCP_FAILED));
                             }
                             throw error;
                         } finally {
@@ -168,7 +178,7 @@ public class GuardedToolCallback implements ToolCallback {
                 });
             } catch (RuntimeException rejected) {
                 if (parent != null) {
-                    parent.error(new IllegalStateException("SUBMISSION_FAILED"));
+                    parent.error(new IllegalStateException(OBSERVATION_ERROR_SUBMISSION_FAILED));
                     parent.stop();
                 }
                 throw rejected;
@@ -202,14 +212,14 @@ public class GuardedToolCallback implements ToolCallback {
                         "SUCCESS"
                 );
                 if (outcome != null) {
-                    outcome[0] = "SUCCESS";
+                    outcome[0] = TELEMETRY_TOOL_OUTCOME_SUCCESS;
                 }
 
                 return result;
             } catch (InterruptedException e) {
                 future.cancel(true);
                 if (parent != null) {
-                    parent.error(new IllegalStateException("INTERRUPTED"));
+                    parent.error(new IllegalStateException(OBSERVATION_ERROR_INTERRUPTED));
                 }
                 Thread.currentThread().interrupt();
                 trace.recordTool(stepSupplier.getAsInt(), toolName, toolInput,

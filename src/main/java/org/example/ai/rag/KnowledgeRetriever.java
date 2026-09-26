@@ -94,11 +94,15 @@ public class KnowledgeRetriever {
             chunks = rankCandidates(query, candidates, mode, limit, cutoff);
         } catch (RuntimeException error) {
             stopWatch.stop();
-            if (telemetry != null) telemetry.retrievalFailed(stopWatch.getTotalTimeNanos());
+            if (telemetry != null) {
+                telemetry.retrievalFailed(stopWatch.getTotalTimeNanos());
+            }
             throw error;
         }
         stopWatch.stop();
-        if (telemetry != null) telemetry.retrievalFinished(stopWatch.getTotalTimeNanos(), candidates.size(), chunks.size());
+        if (telemetry != null) {
+            telemetry.retrievalFinished(stopWatch.getTotalTimeNanos(), candidates.size(), chunks.size());
+        }
         // 汇总日志只输出配置和数量，不记录可能带凭据的查询正文。
         log.info("RAG mode={} topK={} threshold={} hits={} elapsedMs={}",
                 mode, limit, cutoff, chunks.size(),

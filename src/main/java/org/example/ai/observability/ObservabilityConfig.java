@@ -2,6 +2,7 @@ package org.example.ai.observability;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import io.micrometer.common.KeyValues;
@@ -10,6 +11,7 @@ import org.springframework.ai.vectorstore.observation.VectorStoreObservationCont
 import org.springframework.ai.vectorstore.observation.VectorStoreObservationConvention;
 
 /** Day13 观测配置：复用 Spring Boot 自动配置的 MeterRegistry 与 ObservationRegistry。 */
+@NullMarked
 @Configuration
 public class ObservabilityConfig {
     /** 为业务边界提供统一的指标及追踪入口。 */
