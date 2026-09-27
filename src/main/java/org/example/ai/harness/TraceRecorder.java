@@ -252,7 +252,7 @@ public class TraceRecorder {
             return null;
         }
 
-        int max = 1000;
+        int max = 10000;
 
         return value.length() <= max
                 ? value

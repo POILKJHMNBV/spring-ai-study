@@ -3,6 +3,9 @@ package org.example.ai.harness;
 import io.micrometer.observation.Observation;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+import org.example.ai.diagnosis.DiagnosisReport;
+import org.example.ai.diagnosis.DiagnosisReportValidator;
+import org.example.ai.diagnosis.DiagnosisStatus;
 import org.example.ai.observability.AgentTelemetry;
 import org.example.ai.rag.KnowledgeRetriever;
 import org.example.ai.rag.RetrievedChunk;
@@ -30,7 +33,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -63,6 +65,7 @@ import static org.example.ai.common.Constants.*;
  */
 @Service
 @Slf4j
+@SuppressWarnings("all")
 public class AgentRunner {
     /**
      * 循环控制：Agent 底层循环最大步数。
@@ -132,16 +135,19 @@ public class AgentRunner {
      * @param conversationId 当前会话 ID
      * @param memoryEnabled  是否启用跨轮 Memory；Day5 对照实验时可关闭
      * @param kafkaToolMode  Kafka Tool 的接入方式
+     * @return 包含自然语言展示文本、结构化诊断报告及执行轨迹的运行结果
      */
     public AgentRunResult run(String userPrompt, String conversationId, boolean memoryEnabled, KafkaToolMode kafkaToolMode) {
+        // 将本次运行进度保存在外围，以便意外异常也能返回真实步数并写入指标。
+        AtomicInteger currentStep = new AtomicInteger(0);
         if (telemetry == null) {
-            return runInternal(userPrompt, conversationId, memoryEnabled, kafkaToolMode);
+            return runInternal(userPrompt, conversationId, memoryEnabled, kafkaToolMode, currentStep);
         }
         long started = System.nanoTime();
         Observation request = telemetry.start(OBSERVATION_AGENT_REQUEST);
         AgentRunResult result = null;
         try (Observation.Scope ignored = request.openScope()) {
-            result = runInternal(userPrompt, conversationId, memoryEnabled, kafkaToolMode);
+            result = runInternal(userPrompt, conversationId, memoryEnabled, kafkaToolMode, currentStep);
             if (result.status() != AgentRunResult.RunStatus.COMPLETED) {
                 // 受控失败也标记 Trace；只使用固定状态，避免异常消息进入 Span。
                 request.error(new IllegalStateException(result.status().name()));
@@ -154,8 +160,8 @@ public class AgentRunner {
             log.error("Agent run failed:", e);
             return new AgentRunResult(
                     AgentRunResult.RunStatus.FAILED,
-                    "系统服务异常：" + e.getMessage(),
-                    0,
+                    "系统服务异常，请稍后重试。",
+                    currentStep.get(),
                     null);
         } finally {
             telemetry.agentFinished(result == null ? TELEMETRY_AGENT_STATUS_FAILED : result.status().name(),
@@ -164,15 +170,27 @@ public class AgentRunner {
         }
     }
 
-    /** 原有 Agent 决策过程；外围 Observation 只观察结果，不改变决策。 */
-    private AgentRunResult runInternal(String userPrompt, String conversationId, boolean memoryEnabled, KafkaToolMode kafkaToolMode) {
+    /**
+     * 执行原有 Agent 决策过程，并在最终回答阶段强制转换结构化诊断报告。
+     * 外围 Observation 只观察结果，不改变工具循环的决策顺序。
+     *
+     * @param userPrompt 当前用户问题
+     * @param conversationId 当前会话 ID
+     * @param memoryEnabled 是否读取和保存跨轮会话记忆
+     * @param kafkaToolMode Kafka Tool 的接入方式
+     * @param currentStep 由外围调用创建的步数计数器，用于异常路径保留进度
+     * @return Agent 本次运行结果及结构化诊断报告
+     */
+    private AgentRunResult runInternal(String userPrompt,
+                                       String conversationId,
+                                       boolean memoryEnabled,
+                                       KafkaToolMode kafkaToolMode,
+                                       AtomicInteger currentStep) {
         String safeConversationId = ConversationSecurity.requireValidConversationId(conversationId);
 
         TraceRecorder trace = new TraceRecorder();
 
         ExecutionPolicy.RunState policyState = executionPolicy.newRunState();
-
-        AtomicInteger currentStep = new AtomicInteger(0);
 
         /*
          * Day7：
@@ -268,7 +286,8 @@ public class AgentRunner {
         String knowledgeContext = buildKnowledgeContext(retrievedChunks);
 
         List<Message> messages = new ArrayList<>();
-        messages.add(new SystemMessage(SYSTEM_PROMPT));
+        // Day14：系统提示附带 DTO Schema 与证据/来源约束，工具调用仍沿用现有模型配置。
+        messages.add(new SystemMessage(SYSTEM_PROMPT + "\n\n" + DiagnosisReportValidator.outputFormat()));
         if (memoryEnabled) {
             // 处理当前用户问题之前加载会话历史
             messages.addAll(chatMemory.get(safeConversationId));
@@ -312,16 +331,21 @@ public class AgentRunner {
                         trace.snapshot()
                 );
             } finally {
-                if (modelObservation != null) modelObservation.stop();
+                if (modelObservation != null) {
+                    modelObservation.stop();
+                }
             }
             stopWatch.stop();
             if (telemetry != null) {
-                telemetry.modelFinished(System.nanoTime() - modelStarted, response.getMetadata().getUsage());
+                // 某些模型/测试桩可能返回 null response 或 metadata；用量未知时只记录延迟。
+                telemetry.modelFinished(System.nanoTime() - modelStarted,
+                        response == null || response.getMetadata() == null
+                                ? null : response.getMetadata().getUsage());
             }
 
-            Generation responseResult = response.getResult();
-            if (Objects.isNull(responseResult)) {
-                log.error("Chat response is null");
+            Generation responseResult = response == null ? null : response.getResult();
+            if (responseResult == null || responseResult.getOutput() == null) {
+                log.error("Chat response or generation output is null");
                 trace.recordStop(step, "LLM returned empty response");
 
                 return new AgentRunResult(
@@ -347,11 +371,37 @@ public class AgentRunner {
                     emptyAnswerRetried = true;
                     trace.recordEmptyAnswerRetry(step);
                     List<Message> retryMessages = new ArrayList<>(prompt.getInstructions());
-                    retryMessages.add(new UserMessage("上一轮未提供回答正文，请基于已获取的工具证据给出简洁的最终结论；证据缺失则明确说明。"));
+                    retryMessages.add(new UserMessage("上一轮未提供回答正文。请基于已获取的工具证据返回一个完整的 DiagnosisReport JSON 对象，严格遵守系统消息中的 JSON Schema 和字段约束；证据缺失时使用 INSUFFICIENT_EVIDENCE 并填写 missingInformation。"));
                     prompt = new Prompt(retryMessages, options);
                     contextMessageCount = retryMessages.size();
                     continue;
                 }
+                // 对模型的最终原文做严格预检，再由 BeanOutputConverter 绑定；解析失败绝不补写记忆。
+                DiagnosisReport report;
+                try {
+                    report = DiagnosisReportValidator.parse(answer);
+                } catch (IllegalArgumentException e) {
+                    trace.recordStop(step, "Structured diagnosis output rejected");
+                    log.warn("Structured diagnosis output rejected", e);
+                    return new AgentRunResult(
+                            AgentRunResult.RunStatus.FAILED,
+                            "模型未按要求返回有效的结构化诊断报告。",
+                            step,
+                            trace.snapshot(),
+                            DiagnosisReport.failed());
+                }
+
+                String renderedAnswer = report.renderForDisplay();
+                if (report.status() == DiagnosisStatus.FAILED) {
+                    trace.recordStop(step, "Diagnosis report status is FAILED");
+                    return new AgentRunResult(
+                            AgentRunResult.RunStatus.FAILED,
+                            renderedAnswer,
+                            step,
+                            trace.snapshot(),
+                            report);
+                }
+
                 trace.recordStop(step, "No more tool calls");
 
                 /*
@@ -361,10 +411,11 @@ public class AgentRunner {
                  * 中间 Tool Call / Tool Result 不保存。
                  */
                 if (memoryEnabled) {
-                    saveMemoryTurn(safeConversationId, userPrompt, answer);
+                    saveMemoryTurn(safeConversationId, userPrompt, renderedAnswer);
                 }
 
-                return new AgentRunResult(AgentRunResult.RunStatus.COMPLETED, answer, step, trace.snapshot());
+                return new AgentRunResult(AgentRunResult.RunStatus.COMPLETED,
+                        renderedAnswer, step, trace.snapshot(), report);
             }
 
             List<AssistantMessage.ToolCall> toolCalls = responseResult

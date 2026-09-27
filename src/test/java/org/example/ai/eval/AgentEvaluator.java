@@ -2,6 +2,7 @@ package org.example.ai.eval;
 
 import org.example.ai.harness.AgentRunResult;
 import org.example.ai.harness.TraceRecorder;
+import org.example.ai.diagnosis.DiagnosisReport;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -78,6 +79,11 @@ final class AgentEvaluator {
 
     /**
      * 对一个 Eval Case 的 AgentRunResult 做结构化评分。
+     *
+     * @param evalCase 本次固定案例定义，包含预期状态、诊断关键词和工具约束
+     * @param runResult Agent 的结构化运行结果，含诊断报告与真实执行 Trace
+     * @param latencyMs 本次请求耗时，单位为毫秒
+     * @return 包含判断、证据和调用轨迹评分的单案例结果
      */
     AgentEvalCaseResult evaluate(
             AgentEvalCase evalCase,
@@ -92,6 +98,7 @@ final class AgentEvaluator {
                         runResult.answer(),
                         ""
                 );
+        DiagnosisReport report = runResult.report();
 
         Set<String> actualTools = trace.stream()
                 .filter(event ->
@@ -111,15 +118,12 @@ final class AgentEvaluator {
                         Collectors.toCollection(TreeSet::new)
                 );
 
-        boolean mainJudgmentPass =
-                containsRequiredKeywords(
-                        answer,
-                        evalCase.requiredKeywordGroups()
-                )
-                        && containsNoForbiddenKeywords(
-                        answer,
-                        evalCase.forbiddenAnswerKeywords()
-                );
+        /* 已完成的模型诊断以报告字段为准；受控失败继续按其具体失败说明评测。 */
+        boolean completedWithReport = report != null
+                && runResult.status() == AgentRunResult.RunStatus.COMPLETED;
+        String judgmentText = completedWithReport ? reportSearchText(report) : answer;
+        boolean mainJudgmentPass = mainDiagnosisPass(
+                evalCase, completedWithReport ? report : null, judgmentText);
 
         boolean statusPass =
                 runResult.status()
@@ -166,9 +170,42 @@ final class AgentEvaluator {
         boolean sourceCitationPass =
                 ragSources.containsAll(citedSources);
 
+        /* 报告事实的来源必须出现在本次 Tool 或 RAG Trace 中。 */
+        if (report != null) {
+            Set<String> observedEvidenceSources = new HashSet<>(ragSources);
+            observedEvidenceSources.addAll(actualTools);
+            sourceCitationPass = sourceCitationPass
+                    && report.facts().stream()
+                    .allMatch(fact -> fact != null
+                            && fact.source() != null
+                            && observedEvidenceSources.contains(fact.source()));
+        }
+
+        /* COMPLETED 必须有报告；每个提出的假设都要附带非空证据。 */
+        boolean structuredOutputPass = runResult.status() != AgentRunResult.RunStatus.COMPLETED
+                || report != null;
+        if (report != null) {
+            structuredOutputPass = structuredOutputPass
+                    && report.hypotheses().stream()
+                    .allMatch(hypothesis -> hypothesis != null
+                            && hypothesis.evidence() != null
+                            && !hypothesis.evidence().isEmpty()
+                            && hypothesis.evidence().stream().allMatch(Objects::nonNull)
+                            && Double.isFinite(hypothesis.confidence())
+                            && hypothesis.confidence() >= 0.0
+                            && hypothesis.confidence() <= 1.0);
+            if ("E01".equals(evalCase.id())) {
+                /* E01 需要至少一项由本次实时 Tool 查询得到的事实。 */
+                structuredOutputPass = structuredOutputPass
+                        && !report.hypotheses().isEmpty()
+                        && report.facts().stream()
+                        .anyMatch(fact -> fact != null && actualTools.contains(fact.source()));
+            }
+        }
+
         EvidenceAudit evidenceAudit =
                 auditMetricEvidence(
-                        answer,
+                        judgmentText,
                         trace
                 );
 
@@ -189,6 +226,7 @@ final class AgentEvaluator {
                         && ragExpectationPass
                         && exceptionHandlingPass
                         && sourceCitationPass
+                        && structuredOutputPass
                         && evidenceAudit.pass();
 
         return new AgentEvalCaseResult(
@@ -201,6 +239,7 @@ final class AgentEvaluator {
                 stepPass,
                 evidenceAudit.pass(),
                 sourceCitationPass,
+                structuredOutputPass,
                 ragExpectationPass,
                 exceptionHandlingPass,
                 overallPass,
@@ -214,6 +253,65 @@ final class AgentEvaluator {
                 totalTokens,
                 answer
         );
+    }
+
+    /**
+     * 将报告中的业务文字合并为评测输入，不从原始 JSON 文本抽取诊断结论。
+     *
+     * @param report 经严格转换的结构化诊断报告
+     * @return 可供非 E01 案例关键字检查的报告文字
+     */
+    private String reportSearchText(DiagnosisReport report) {
+        StringBuilder text = new StringBuilder();
+        append(text, report.summary());
+        report.facts().forEach(fact -> {
+            if (fact != null) append(text, fact.statement());
+        });
+        report.hypotheses().forEach(hypothesis -> {
+            if (hypothesis != null) {
+                append(text, hypothesis.cause());
+                hypothesis.evidence().forEach(value -> append(text, value));
+            }
+        });
+        report.nextActions().forEach(action -> {
+            if (action != null) append(text, action.description());
+        });
+        report.missingInformation().forEach(value -> append(text, value));
+        return text.toString();
+    }
+
+    /**
+     * 跳过 null 文本，避免在关键词检查中引入无意义的字面值。
+     *
+     * @param target 正在构造的报告评测文字
+     * @param value 报告中的单个文字字段
+     */
+    private void append(StringBuilder target, String value) {
+        if (value != null) target.append(value).append('\n');
+    }
+
+    /**
+     * 计算案例主要判断；E01 只认可 DIAGNOSED 报告中实际命中的根因假设。
+     *
+     * @param evalCase 固定案例规则
+     * @param report 已转换的诊断报告；为 null 时只能使用兼容文本路径
+     * @param judgmentText 根据报告字段生成的评测文字
+     * @return 主要判断是否符合案例预期
+     */
+    private boolean mainDiagnosisPass(AgentEvalCase evalCase, DiagnosisReport report, String judgmentText) {
+        if ("E01".equals(evalCase.id()) && report != null) {
+            String causes = report.hypotheses().stream()
+                    .filter(Objects::nonNull)
+                    .map(hypothesis -> hypothesis.cause())
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.joining("\n"));
+            return report.status() == org.example.ai.diagnosis.DiagnosisStatus.DIAGNOSED
+                    && !report.hypotheses().isEmpty()
+                    && containsRequiredKeywords(causes, evalCase.requiredKeywordGroups())
+                    && containsNoForbiddenKeywords(causes, evalCase.forbiddenAnswerKeywords());
+        }
+        return containsRequiredKeywords(judgmentText, evalCase.requiredKeywordGroups())
+                && containsNoForbiddenKeywords(judgmentText, evalCase.forbiddenAnswerKeywords());
     }
 
     /**
@@ -504,6 +602,29 @@ final class AgentEvaluator {
 
 /**
  * 一个案例最终保存的结构化 Eval 结果。
+ *
+ * @param id 案例编号
+ * @param description 案例说明
+ * @param status Agent 运行状态
+ * @param mainJudgmentPass 主要诊断是否符合案例预期
+ * @param statusPass 运行状态是否符合案例预期
+ * @param toolSelectionPass 工具选择是否符合案例约束
+ * @param stepPass 执行步数是否符合上限
+ * @param evidenceFaithfulnessPass 数值及结构化假设证据是否可追溯
+ * @param sourceCitationPass 报告事实来源及知识引用是否来自本次 Trace
+ * @param structuredOutputPass 是否具有完整报告和非空、有效置信度证据
+ * @param ragExpectationPass RAG 命中情况是否符合案例预期
+ * @param exceptionHandlingPass 超时等异常路径是否正确处理
+ * @param overallPass 所有门槛是否均通过
+ * @param completedSteps Agent 实际完成步数
+ * @param actualTools 本次实际执行的工具名称
+ * @param ragSources 本次实际检索到的知识来源
+ * @param unsupportedMetricValues 无法从工具输出追溯的指标数值
+ * @param latencyMs 本次请求耗时，单位为毫秒
+ * @param promptTokens 可确认的 Prompt token 总数
+ * @param completionTokens 可确认的 Completion token 总数
+ * @param totalTokens 可确认的 Token 总数
+ * @param answer 原始展示回答，便于回看失败案例
  */
 record AgentEvalCaseResult(
         String id,
@@ -515,6 +636,7 @@ record AgentEvalCaseResult(
         boolean stepPass,
         boolean evidenceFaithfulnessPass,
         boolean sourceCitationPass,
+        boolean structuredOutputPass,
         boolean ragExpectationPass,
         boolean exceptionHandlingPass,
         boolean overallPass,

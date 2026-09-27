@@ -157,6 +157,12 @@ class AgentEvaluationIT {
                         + REPORT_PATH
         );
 
+        /* 每个正常完成的 Day14 响应都必须经过严格 JSON 转换并带有效结构化证据。 */
+        assertTrue(
+                results.stream().allMatch(AgentEvalCaseResult::structuredOutputPass),
+                () -> "存在缺失或无效的结构化诊断报告，详见 " + REPORT_PATH
+        );
+
         AgentEvalCaseResult e06 =
                 findResult(results, "E06");
 

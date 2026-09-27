@@ -25,7 +25,7 @@ spring:
       chat:
         model: qwen3.5:9b
         # Day10 四个工具的 Schema、RAG 与多轮证据需要更大的上下文，避免本机默认 4096 截断。
-        num-ctx: 8192
+        num-ctx: 16384
       embedding:
         # 中文知识库使用 BGE-M3；模型 digest 变化时重新生成文档向量。
         model: bge-m3

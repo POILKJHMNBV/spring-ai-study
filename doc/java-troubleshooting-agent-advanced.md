@@ -732,10 +732,14 @@ answer contains "线程池饱和"
 
 ### 验收
 
-- [ ] Controller 返回稳定 JSON；
-- [ ] Eval 开始使用结构化字段；
-- [ ] 字段缺失不会被静默忽略；
-- [ ] 自然语言只是展示层，不再是系统内部唯一 Contract。
+- [x] Controller 返回稳定 JSON（运行结果包含完整 DiagnosisReport）；
+- [x] Eval 开始使用结构化字段（E01 检查假设、状态、工具来源和证据）；
+- [x] 字段缺失不会被静默忽略（根字段、嵌套字段与类型错误显式拒绝）；
+- [x] 自然语言只是展示层，不再是系统内部唯一 Contract。
+
+实现、官方依据、真实 PGVector/Ollama 结果及子 Agent 评估见
+[Day14 实验记录](experiments/day14-structured-output.md)。报告保留模型判断与重复工具调用的实测限制；
+完整业务校验和修复继续在 Day15 推进。
 
 ---
 

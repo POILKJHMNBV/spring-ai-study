@@ -35,17 +35,28 @@ class EmptyAnswerRecoveryTest {
                 new ExecutionPolicy(), retriever, memory);
     }
 
+    /**
+     * 使用指定正文构造不依赖网络的模型响应；测试也会传入空字符串触发补问。
+     *
+     * @param text 模型固定返回正文
+     * @return Spring AI 格式的模型响应
+     */
     private ChatResponse response(String text) {
         return new ChatResponse(List.of(new Generation(new AssistantMessage(text))));
     }
 
     @Test
     void retriesEmptyAnswerOnceWithinStepBudget() {
-        when(model.call(any(Prompt.class))).thenReturn(response(""), response("证据不足，无法确定"));
+        when(model.call(any(Prompt.class))).thenReturn(response(""), response("""
+                {"status":"INSUFFICIENT_EVIDENCE","summary":"证据不足，无法确定",
+                 "facts":[],"hypotheses":[],"nextActions":[],"missingInformation":["服务指标"]}
+                """));
         var result = runner().run("排查服务", "empty-recovery", false);
         assertEquals(AgentRunResult.RunStatus.COMPLETED, result.status());
         assertEquals(2, result.completedSteps());
-        assertEquals("证据不足，无法确定", result.answer());
+        assertTrue(result.answer().contains("证据不足，无法确定"));
+        assertNotNull(result.report());
+        assertEquals("证据不足，无法确定", result.report().summary());
         assertTrue(result.trace().stream().anyMatch(event -> "EMPTY_ANSWER_RETRY".equals(event.output())
                 || "EMPTY_ANSWER_RETRY".equals(event.status())));
         verify(model, times(2)).call(any(Prompt.class));

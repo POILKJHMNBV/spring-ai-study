@@ -42,23 +42,37 @@ public class ChatController {
         return chatService.chat(userPrompt, conversationId);
     }
 
+    /**
+     * 执行带工具与检索能力的 Agent，并以稳定 JSON 对象返回运行状态、轨迹和结构化报告。
+     *
+     * @param userPrompt 当前故障排查问题
+     * @param conversationId 当前会话标识
+     * @param memoryEnabled 是否读取和保存会话记忆
+     * @return 包含 answer 展示文本和 report 结构化字段的完整运行结果
+     */
     @GetMapping("/agent")
-    public String agent(String userPrompt,
-                        String conversationId,
-                        @RequestParam(defaultValue = "true") boolean memoryEnabled) {
-        // AgentRunResult result = agentRunner.run(userPrompt, conversationId, memoryEnabled);
-        AgentRunResult result = agentRunner.run(userPrompt, conversationId, memoryEnabled, KafkaToolMode.MCP);
-        return result.answer();
+    public AgentRunResult agent(String userPrompt,
+                                String conversationId,
+                                @RequestParam(defaultValue = "true") boolean memoryEnabled) {
+        return agentRunner.run(userPrompt, conversationId, memoryEnabled, KafkaToolMode.MCP);
     }
 
+    /**
+     * 切换指定 Mock 场景并执行 Agent Eval，以稳定 JSON 对象返回完整运行结果。
+     *
+     * @param userPrompt 本次评测问题
+     * @param conversationId 本次评测使用的会话标识
+     * @param mockScenario 用于模拟工具数据的场景
+     * @param memoryEnabled 是否读取和保存会话记忆
+     * @return 包含 answer 展示文本和 report 结构化字段的完整运行结果
+     */
     @GetMapping("/eval")
-    public String eval(String userPrompt,
-                       String conversationId,
-                       MockScenario mockScenario,
-                       @RequestParam(defaultValue = "false") boolean memoryEnabled) {
+    public AgentRunResult eval(String userPrompt,
+                               String conversationId,
+                               MockScenario mockScenario,
+                               @RequestParam(defaultValue = "false") boolean memoryEnabled) {
         opsMockDataProvider.useScenario(mockScenario);
-        AgentRunResult result = agentRunner.run(userPrompt, conversationId, memoryEnabled);
-        return result.answer();
+        return agentRunner.run(userPrompt, conversationId, memoryEnabled);
     }
 
     /**

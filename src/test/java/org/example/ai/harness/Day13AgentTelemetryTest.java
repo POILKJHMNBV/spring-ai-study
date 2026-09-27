@@ -128,11 +128,12 @@ class Day13AgentTelemetryTest {
 
     /** 检索抛出异常时外围请求观测仍结束，且失败数不能漏记。 */
     @Test
-    void retrievalExceptionClosesFailedRequestObservation() {
+    void retrievalExceptionReturnsControlledFailureAndClosesObservation() {
         AgentRunner runner = runner();
         when(retriever.retrieve(anyString())).thenThrow(new IllegalStateException("synthetic retrieval error"));
-        assertThrows(IllegalStateException.class,
-                () -> runner.run("排查服务", "day13-rag-failed", false));
+        AgentRunResult result = runner.run("排查服务", "day13-rag-failed", false);
+        assertEquals(AgentRunResult.RunStatus.FAILED, result.status());
+        assertEquals(0, result.completedSteps());
         assertEquals(1, count("agent.requests"));
         assertEquals(1, count("agent.failures"));
         assertTrue(capture.events.stream().anyMatch(e -> e.name().equals("rag.retrieve")
@@ -147,7 +148,7 @@ class Day13AgentTelemetryTest {
         when(usage.getPromptTokens()).thenReturn(12);
         when(usage.getCompletionTokens()).thenReturn(7);
         ChatResponse response = mock(ChatResponse.class, RETURNS_DEEP_STUBS);
-        when(response.getResult()).thenReturn(new Generation(new AssistantMessage("完成")));
+        when(response.getResult()).thenReturn(new Generation(new AssistantMessage(reportJson("完成"))));
         when(response.getMetadata().getUsage()).thenReturn(usage);
         when(model.call(any(Prompt.class))).thenReturn(response);
         assertEquals(AgentRunResult.RunStatus.COMPLETED,
@@ -157,9 +158,27 @@ class Day13AgentTelemetryTest {
         assertEquals(0, count("llm.usage.unknown"));
     }
 
-    /** 构造不依赖网络的 Spring AI 模型响应。 */
+    /**
+     * 构造不依赖网络的 Spring AI 模型响应。
+     *
+     * @param body 需要放进诊断报告摘要的固定文字
+     * @return 带有合法 Day14 报告 JSON 的模型响应
+     */
     private ChatResponse response(String body) {
-        return new ChatResponse(List.of(new Generation(new AssistantMessage(body))));
+        return new ChatResponse(List.of(new Generation(new AssistantMessage(reportJson(body)))));
+    }
+
+    /**
+     * 将基线测试的摘要包装为符合 Day14 必填字段的固定 JSON。
+     *
+     * @param summary 报告摘要文字
+     * @return 全部必填字段齐全的 JSON 文本
+     */
+    private String reportJson(String summary) {
+        return """
+                {"status":"INSUFFICIENT_EVIDENCE","summary":"%s",
+                 "facts":[],"hypotheses":[],"nextActions":[],"missingInformation":["监控证据"]}
+                """.formatted(summary);
     }
 
     /** 对一个指标名聚合所有安全低基数标签组合。 */
