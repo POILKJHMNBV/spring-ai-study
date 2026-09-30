@@ -53,7 +53,9 @@ public class TraceRecorder {
         /** Agent 停止（正常完成、步数超限、失败等）。 */
         STOP,
         /** RAG 检索命中。 */
-        RAG
+        RAG,
+        /** 最终结构化报告的业务校验与一次修复流程。 */
+        VALIDATION
     }
 
     /**
@@ -203,6 +205,30 @@ public class TraceRecorder {
     public void recordEmptyAnswerRetry(int step) {
         add(new TraceEvent(step, EventType.MODEL, "chatModel.call", null,
                 "模型正文为空，最多补问一次", 0, null, null, null, "EMPTY_ANSWER_RETRY"));
+    }
+
+    /**
+     * 记录结构化诊断报告的输出契约验证结果。
+     *
+     * @param step 发生解析或业务校验的 Agent 步数
+     * @param status 校验状态，使用 PASS 或 REJECTED
+     * @param detail 简短的固定诊断信息，不应包含原始敏感工具数据
+     */
+    public void recordValidation(int step, String status, String detail) {
+        add(new TraceEvent(step, EventType.VALIDATION, "OUTPUT_VALIDATION", null,
+                truncate(detail), 0, null, null, null, status));
+    }
+
+    /**
+     * 记录共享一次恢复预算的结构化报告修复状态。
+     *
+     * @param step 开始或结束修复时对应的 Agent 步数
+     * @param status 修复状态：STARTED、SUCCEEDED、FAILED 或 LIMIT
+     * @param detail 修复原因或受控结果摘要，不应包含原始敏感工具数据
+     */
+    public void recordRepair(int step, String status, String detail) {
+        add(new TraceEvent(step, EventType.VALIDATION, "REPAIR", null,
+                truncate(detail), 0, null, null, null, status));
     }
 
     public void recordStop(

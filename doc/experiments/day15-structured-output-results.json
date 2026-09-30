@@ -1,0 +1,58 @@
+{
+  "facts": [
+    {
+      "source": "getKafkaStatus",
+      "statement": "TOOL-1"
+    },
+    {
+      "source": "getServiceStatus",
+      "statement": "TOOL-2"
+    },
+    {
+      "source": "getDependencyStatus",
+      "statement": "TOOL-3"
+    },
+    {
+      "source": "queryErrorLogs",
+      "statement": "TOOL-4"
+    }
+  ],
+  "hypotheses": [
+    {
+      "cause": "支付服务线程池容量耗尽，处理能力饱和，导致消息消费速率低于生产速率",
+      "confidence": 0.92,
+      "evidence": [
+        "TOOL-2",
+        "TOOL-4"
+      ]
+    },
+    {
+      "cause": "Kafka 消费积压持续累积，生产者速率高于消费者处理速率",
+      "confidence": 0.95,
+      "evidence": [
+        "TOOL-1"
+      ]
+    }
+  ],
+  "missingInformation": [
+    "历史基线：需要对比正常时段的 produceRate/consumeRate/lag 基线",
+    "业务上下文：当前是否有大促或流量高峰场景",
+    "下游瓶颈细节：具体消费延迟的代码路径和耗时分布"
+  ],
+  "nextActions": [
+    {
+      "description": "临时扩容 order-topic 的消费者实例数量，提升并行处理能力",
+      "requiresApproval": true
+    },
+    {
+      "description": "检查消费线程池配置，考虑提升 threadPoolMax 或采用动态扩展方案",
+      "requiresApproval": true
+    },
+    {
+      "description": "优化消费逻辑中的慢操作（如 DB 查询、RPC 调用），降低单次处理耗时",
+      "requiresApproval": true
+    }
+  ],
+  "status": "DIAGNOSED",
+  "summary": "确认故障根因为 payment-service 线程池耗尽导致消费能力饱和。当前积压 Lag=125000，produceRate(6000) > consumeRate(2500)。依赖指标正常（DB p99=30ms, RPC p99=80ms），排除下游瓶颈。任务拒绝异常确认处理能力已达上限。建议扩容消费者并优化消费逻辑。"
+}

@@ -1,0 +1,691 @@
+{
+  "suite" : "day15-output-validation",
+  "generatedAt" : "2026-09-29T13:07:42.413586400Z",
+  "schema" : "day15_it_3b02f5afae2d49de9d354882bf080cb9",
+  "postgresVersion" : "15.19",
+  "pgvectorVersion" : "0.7.2",
+  "chatModel" : "qwen3.5:9b",
+  "embeddingModel" : "bge-m3",
+  "cases" : [ {
+    "id" : "SCRIPTED_FAKE_SOURCE_THEN_RECOVERED",
+    "runStatus" : "COMPLETED",
+    "completedSteps" : 2,
+    "elapsedMs" : 254,
+    "modelCalls" : 2,
+    "memorySaved" : true,
+    "toolNames" : [ ],
+    "validationTrace" : [ {
+      "step" : 1,
+      "type" : "VALIDATION",
+      "name" : "OUTPUT_VALIDATION",
+      "input" : null,
+      "output" : "facts[0] 的 source 或 statement 无法绑定到本次证据",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null,
+      "totalTokens" : null,
+      "status" : "REJECTED"
+    }, {
+      "step" : 1,
+      "type" : "VALIDATION",
+      "name" : "REPAIR",
+      "input" : null,
+      "output" : "输出契约或业务证据校验失败，发起唯一一次修复",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null,
+      "totalTokens" : null,
+      "status" : "STARTED"
+    }, {
+      "step" : 2,
+      "type" : "VALIDATION",
+      "name" : "OUTPUT_VALIDATION",
+      "input" : null,
+      "output" : "报告结构、来源及本次证据校验通过",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null,
+      "totalTokens" : null,
+      "status" : "PASS"
+    }, {
+      "step" : 2,
+      "type" : "VALIDATION",
+      "name" : "REPAIR",
+      "input" : null,
+      "output" : "修复后的报告通过校验",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null,
+      "totalTokens" : null,
+      "status" : "SUCCEEDED"
+    } ],
+    "report" : {
+      "status" : "INSUFFICIENT_EVIDENCE",
+      "summary" : "脚本模型确认当前证据不足",
+      "facts" : [ {
+        "statement" : "知识引用：# MySQL 慢查询排查指南\n\n## 6. 判断原则\n\n如果观察到：\n\n```text\nDB P99 明显升高\nactiveConnections 接近 maximumPoolSize\npendingThreads 增长\n```\n\n可以判断数据库响应变慢已经开始影响连接池和上游请求。\n\n但不能仅凭这些指标确认一定是缺",
+        "source" : "mysql-slow-query.md"
+      } ],
+      "hypotheses" : [ ],
+      "nextActions" : [ ],
+      "missingInformation" : [ "需要最近五分钟的错误日志" ]
+    },
+    "runResult" : {
+      "status" : "COMPLETED",
+      "answer" : "状态：INSUFFICIENT_EVIDENCE\n摘要：脚本模型确认当前证据不足\n已观察事实：\n- 知识引用：# MySQL 慢查询排查指南\n\n## 6. 判断原则\n\n如果观察到：\n\n```text\nDB P99 明显升高\nactiveConnections 接近 maximumPoolSize\npendingThreads 增长\n```\n\n可以判断数据库响应变慢已经开始影响连接池和上游请求。\n\n但不能仅凭这些指标确认一定是缺（来源：mysql-slow-query.md）\n待补充信息：\n- 需要最近五分钟的错误日志",
+      "completedSteps" : 2,
+      "trace" : [ {
+        "step" : 0,
+        "type" : "RAG",
+        "name" : "mysql-slow-query.md",
+        "input" : "rank=1",
+        "output" : "chunkIndex=5\nscore=0.637689083814621\ncontent=# MySQL 慢查询排查指南\n\n## 6. 判断原则\n\n如果观察到：\n\n```text\nDB P99 明显升高\nactiveConnections 接近 maximumPoolSize\npendingThreads 增长\n```\n\n可以判断数据库响应变慢已经开始影响连接池和上游请求。\n\n但不能仅凭这些指标确认一定是缺少索引、锁等待或某一条 SQL 导致。\n\n这些根因需要继续通过 SQL 和数据库指标验证。\n",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "HIT"
+      }, {
+        "step" : 0,
+        "type" : "RAG",
+        "name" : "mysql-slow-query.md",
+        "input" : "rank=2",
+        "output" : "chunkIndex=1\nscore=0.583867222070694\ncontent=# MySQL 慢查询排查指南\n\n## 2. 数据库连接池异常\n\nJava 服务通常使用 HikariCP 等数据库连接池。\n\n`activeConnections` 表示已借出的连接数，`idleConnections` 表示空闲连接数，`maximumPoolSize` 是连接池上限，`pendingThreads` 是等待获取连接的线程数。\n\n常见指标包括：\n\n```text\nactiveConnections\nidleConnections\nmaximumPoolSize\npendingThreads\n```\n\n如果长期出现：\n\n```text\nactiveConnections ≈ maximumPoolSize\npendingThreads > 0\n```\n\n说明新的业务线程已经开始等待数据库连接。\n\n连接池接近满不一定意味着连接池配置太小，也可能是 SQL 执行时间增加导致连接长期无法释放。\n",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "HIT"
+      }, {
+        "step" : 0,
+        "type" : "RAG",
+        "name" : "mysql-slow-query.md",
+        "input" : "rank=3",
+        "output" : "chunkIndex=4\nscore=0.5397737622261047\ncontent=# MySQL 慢查询排查指南\n\n## 5. 推荐排查顺序\n\n首先检查：\n\n```text\nDB P95\nDB P99\ntimeout rate\n```\n\n确认数据库延迟是否真的异常。\n\n然后检查：\n\n```text\nactiveConnections\nmaximumPoolSize\npendingThreads\n```\n\n判断连接池是否开始形成瓶颈。\n\n接着定位执行时间最长或调用次数最多的 SQL，并检查执行计划、索引、锁和事务情况。\n\n最后确认数据库异常时间是否与当前业务故障时间一致。\n",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "HIT"
+      }, {
+        "step" : 1,
+        "type" : "MODEL",
+        "name" : "chatModel.call",
+        "input" : "contextMessages=2",
+        "output" : "{\"status\":\"INSUFFICIENT_EVIDENCE\",\"summary\":\"脚本模型确认当前证据不足\",\"facts\":[{\"statement\":\"知识引用：# MySQL 慢查询排查指南\\n\\n## 6. 判断原则\\n\\n如果观察到：\\n\\n```text\\nDB P99 明显升高\\nactiveConnections 接近 maximumPoolSize\\npendingThreads 增长\\n```\\n\\n可以判断数据库响应变慢已经开始影响连接池和上游请求。\\n\\n但不能仅凭这些指标确认一定是缺\",\"source\":\"伪造的知识来源\"}],\"hypotheses\":[],\"nextActions\":[],\"missingInformation\":[\"需要最近五分钟的错误日志\"]}",
+        "elapsedMs" : 1,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "SUCCESS"
+      }, {
+        "step" : 1,
+        "type" : "VALIDATION",
+        "name" : "OUTPUT_VALIDATION",
+        "input" : null,
+        "output" : "facts[0] 的 source 或 statement 无法绑定到本次证据",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "REJECTED"
+      }, {
+        "step" : 1,
+        "type" : "VALIDATION",
+        "name" : "REPAIR",
+        "input" : null,
+        "output" : "输出契约或业务证据校验失败，发起唯一一次修复",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "STARTED"
+      }, {
+        "step" : 2,
+        "type" : "MODEL",
+        "name" : "chatModel.call",
+        "input" : "contextMessages=5",
+        "output" : "{\"status\":\"INSUFFICIENT_EVIDENCE\",\"summary\":\"脚本模型确认当前证据不足\",\"facts\":[{\"statement\":\"知识引用：# MySQL 慢查询排查指南\\n\\n## 6. 判断原则\\n\\n如果观察到：\\n\\n```text\\nDB P99 明显升高\\nactiveConnections 接近 maximumPoolSize\\npendingThreads 增长\\n```\\n\\n可以判断数据库响应变慢已经开始影响连接池和上游请求。\\n\\n但不能仅凭这些指标确认一定是缺\",\"source\":\"mysql-slow-query.md\"}],\"hypotheses\":[],\"nextActions\":[],\"missingInformation\":[\"需要最近五分钟的错误日志\"]}",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "SUCCESS"
+      }, {
+        "step" : 2,
+        "type" : "VALIDATION",
+        "name" : "OUTPUT_VALIDATION",
+        "input" : null,
+        "output" : "报告结构、来源及本次证据校验通过",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "PASS"
+      }, {
+        "step" : 2,
+        "type" : "VALIDATION",
+        "name" : "REPAIR",
+        "input" : null,
+        "output" : "修复后的报告通过校验",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "SUCCEEDED"
+      }, {
+        "step" : 2,
+        "type" : "STOP",
+        "name" : "AgentRunner",
+        "input" : null,
+        "output" : "No more tool calls",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "STOP"
+      } ],
+      "report" : {
+        "status" : "INSUFFICIENT_EVIDENCE",
+        "summary" : "脚本模型确认当前证据不足",
+        "facts" : [ {
+          "statement" : "知识引用：# MySQL 慢查询排查指南\n\n## 6. 判断原则\n\n如果观察到：\n\n```text\nDB P99 明显升高\nactiveConnections 接近 maximumPoolSize\npendingThreads 增长\n```\n\n可以判断数据库响应变慢已经开始影响连接池和上游请求。\n\n但不能仅凭这些指标确认一定是缺",
+          "source" : "mysql-slow-query.md"
+        } ],
+        "hypotheses" : [ ],
+        "nextActions" : [ ],
+        "missingInformation" : [ "需要最近五分钟的错误日志" ]
+      }
+    }
+  }, {
+    "id" : "SCRIPTED_CONSECUTIVE_INVALID",
+    "runStatus" : "FAILED",
+    "completedSteps" : 2,
+    "elapsedMs" : 53,
+    "modelCalls" : 2,
+    "memorySaved" : false,
+    "toolNames" : [ ],
+    "validationTrace" : [ {
+      "step" : 1,
+      "type" : "VALIDATION",
+      "name" : "OUTPUT_VALIDATION",
+      "input" : null,
+      "output" : "模型返回内容不是严格 JSON",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null,
+      "totalTokens" : null,
+      "status" : "REJECTED"
+    }, {
+      "step" : 1,
+      "type" : "VALIDATION",
+      "name" : "REPAIR",
+      "input" : null,
+      "output" : "输出契约或业务证据校验失败，发起唯一一次修复",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null,
+      "totalTokens" : null,
+      "status" : "STARTED"
+    }, {
+      "step" : 2,
+      "type" : "VALIDATION",
+      "name" : "OUTPUT_VALIDATION",
+      "input" : null,
+      "output" : "模型返回内容不是严格 JSON",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null,
+      "totalTokens" : null,
+      "status" : "REJECTED"
+    }, {
+      "step" : 2,
+      "type" : "VALIDATION",
+      "name" : "REPAIR",
+      "input" : null,
+      "output" : "唯一一次修复后的报告未通过校验",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null,
+      "totalTokens" : null,
+      "status" : "FAILED"
+    } ],
+    "report" : {
+      "status" : "FAILED",
+      "summary" : "未能生成可用的结构化诊断报告。",
+      "facts" : [ ],
+      "hypotheses" : [ ],
+      "nextActions" : [ ],
+      "missingInformation" : [ ]
+    },
+    "runResult" : {
+      "status" : "FAILED",
+      "answer" : "模型未按要求返回有效的结构化诊断报告。",
+      "completedSteps" : 2,
+      "trace" : [ {
+        "step" : 1,
+        "type" : "MODEL",
+        "name" : "chatModel.call",
+        "input" : "contextMessages=2",
+        "output" : "脚本注入：非法输出一",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "SUCCESS"
+      }, {
+        "step" : 1,
+        "type" : "VALIDATION",
+        "name" : "OUTPUT_VALIDATION",
+        "input" : null,
+        "output" : "模型返回内容不是严格 JSON",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "REJECTED"
+      }, {
+        "step" : 1,
+        "type" : "VALIDATION",
+        "name" : "REPAIR",
+        "input" : null,
+        "output" : "输出契约或业务证据校验失败，发起唯一一次修复",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "STARTED"
+      }, {
+        "step" : 2,
+        "type" : "MODEL",
+        "name" : "chatModel.call",
+        "input" : "contextMessages=5",
+        "output" : "脚本注入：非法输出二",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "SUCCESS"
+      }, {
+        "step" : 2,
+        "type" : "VALIDATION",
+        "name" : "OUTPUT_VALIDATION",
+        "input" : null,
+        "output" : "模型返回内容不是严格 JSON",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "REJECTED"
+      }, {
+        "step" : 2,
+        "type" : "VALIDATION",
+        "name" : "REPAIR",
+        "input" : null,
+        "output" : "唯一一次修复后的报告未通过校验",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "FAILED"
+      }, {
+        "step" : 2,
+        "type" : "STOP",
+        "name" : "AgentRunner",
+        "input" : null,
+        "output" : "Structured diagnosis output rejected after repair",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "STOP"
+      } ],
+      "report" : {
+        "status" : "FAILED",
+        "summary" : "未能生成可用的结构化诊断报告。",
+        "facts" : [ ],
+        "hypotheses" : [ ],
+        "nextActions" : [ ],
+        "missingInformation" : [ ]
+      }
+    }
+  }, {
+    "id" : "REAL_OLLAMA_E07",
+    "runStatus" : "COMPLETED",
+    "completedSteps" : 1,
+    "elapsedMs" : 7873,
+    "modelCalls" : -1,
+    "memorySaved" : false,
+    "toolNames" : [ ],
+    "validationTrace" : [ {
+      "step" : 1,
+      "type" : "VALIDATION",
+      "name" : "OUTPUT_VALIDATION",
+      "input" : null,
+      "output" : "报告结构、来源及本次证据校验通过",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null,
+      "totalTokens" : null,
+      "status" : "PASS"
+    } ],
+    "report" : {
+      "status" : "INSUFFICIENT_EVIDENCE",
+      "summary" : "未检索到与'ZXQ-917 FROBNICATOR glyph checksum anomaly'相关的团队知识条目，当前会话中缺乏具体服务名称和实时运行指标证据。需要用户提供明确的服务名称及相关组件信息（如Kafka Topic、数据库依赖等）才能进行故障排查。",
+      "facts" : [ ],
+      "hypotheses" : [ ],
+      "nextActions" : [ {
+        "description" : "请提供具体的服务名称，以便查询该服务的运行状态和错误日志",
+        "requiresApproval" : false
+      }, {
+        "description" : "若需排查数据库或RPC依赖问题，请确认相关服务名及Kafka Topic名称",
+        "requiresApproval" : false
+      } ],
+      "missingInformation" : [ "未检索到与'ZXQ-917 FROBNICATOR glyph checksum anomaly'相关的团队知识条目", "当前会话中未提供具体的服务名称（如FROBNICATOR对应的Java服务名）", "未获取该服务或相关组件的实时运行指标（CPU、内存、线程池、Kafka状态、依赖状态等）", "未获取相关服务的错误日志" ]
+    },
+    "runResult" : {
+      "status" : "COMPLETED",
+      "answer" : "状态：INSUFFICIENT_EVIDENCE\n摘要：未检索到与'ZXQ-917 FROBNICATOR glyph checksum anomaly'相关的团队知识条目，当前会话中缺乏具体服务名称和实时运行指标证据。需要用户提供明确的服务名称及相关组件信息（如Kafka Topic、数据库依赖等）才能进行故障排查。\n下一步建议：\n- 请提供具体的服务名称，以便查询该服务的运行状态和错误日志（模型建议无需人工审批）\n- 若需排查数据库或RPC依赖问题，请确认相关服务名及Kafka Topic名称（模型建议无需人工审批）\n待补充信息：\n- 未检索到与'ZXQ-917 FROBNICATOR glyph checksum anomaly'相关的团队知识条目\n- 当前会话中未提供具体的服务名称（如FROBNICATOR对应的Java服务名）\n- 未获取该服务或相关组件的实时运行指标（CPU、内存、线程池、Kafka状态、依赖状态等）\n- 未获取相关服务的错误日志",
+      "completedSteps" : 1,
+      "trace" : [ {
+        "step" : 1,
+        "type" : "MODEL",
+        "name" : "chatModel.call",
+        "input" : "contextMessages=2",
+        "output" : "{\n  \"facts\": [],\n  \"hypotheses\": [],\n  \"missingInformation\": [\n    \"未检索到与'ZXQ-917 FROBNICATOR glyph checksum anomaly'相关的团队知识条目\",\n    \"当前会话中未提供具体的服务名称（如FROBNICATOR对应的Java服务名）\",\n    \"未获取该服务或相关组件的实时运行指标（CPU、内存、线程池、Kafka状态、依赖状态等）\",\n    \"未获取相关服务的错误日志\"\n  ],\n  \"nextActions\": [\n    {\n      \"description\": \"请提供具体的服务名称，以便查询该服务的运行状态和错误日志\",\n      \"requiresApproval\": false\n    },\n    {\n      \"description\": \"若需排查数据库或RPC依赖问题，请确认相关服务名及Kafka Topic名称\",\n      \"requiresApproval\": false\n    }\n  ],\n  \"status\": \"INSUFFICIENT_EVIDENCE\",\n  \"summary\": \"未检索到与'ZXQ-917 FROBNICATOR glyph checksum anomaly'相关的团队知识条目，当前会话中缺乏具体服务名称和实时运行指标证据。需要用户提供明确的服务名称及相关组件信息（如Kafka Topic、数据库依赖等）才能进行故障排查。\"\n}",
+        "elapsedMs" : 7827,
+        "promptTokens" : 2526,
+        "completionTokens" : 603,
+        "totalTokens" : 3129,
+        "status" : "SUCCESS"
+      }, {
+        "step" : 1,
+        "type" : "VALIDATION",
+        "name" : "OUTPUT_VALIDATION",
+        "input" : null,
+        "output" : "报告结构、来源及本次证据校验通过",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "PASS"
+      }, {
+        "step" : 1,
+        "type" : "STOP",
+        "name" : "AgentRunner",
+        "input" : null,
+        "output" : "No more tool calls",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "STOP"
+      } ],
+      "report" : {
+        "status" : "INSUFFICIENT_EVIDENCE",
+        "summary" : "未检索到与'ZXQ-917 FROBNICATOR glyph checksum anomaly'相关的团队知识条目，当前会话中缺乏具体服务名称和实时运行指标证据。需要用户提供明确的服务名称及相关组件信息（如Kafka Topic、数据库依赖等）才能进行故障排查。",
+        "facts" : [ ],
+        "hypotheses" : [ ],
+        "nextActions" : [ {
+          "description" : "请提供具体的服务名称，以便查询该服务的运行状态和错误日志",
+          "requiresApproval" : false
+        }, {
+          "description" : "若需排查数据库或RPC依赖问题，请确认相关服务名及Kafka Topic名称",
+          "requiresApproval" : false
+        } ],
+        "missingInformation" : [ "未检索到与'ZXQ-917 FROBNICATOR glyph checksum anomaly'相关的团队知识条目", "当前会话中未提供具体的服务名称（如FROBNICATOR对应的Java服务名）", "未获取该服务或相关组件的实时运行指标（CPU、内存、线程池、Kafka状态、依赖状态等）", "未获取相关服务的错误日志" ]
+      }
+    }
+  }, {
+    "id" : "REAL_OLLAMA_E01",
+    "runStatus" : "FAILED",
+    "completedSteps" : 3,
+    "elapsedMs" : 23818,
+    "modelCalls" : -1,
+    "memorySaved" : false,
+    "toolNames" : [ "getDependencyStatus", "getKafkaStatus", "getServiceStatus", "queryErrorLogs" ],
+    "validationTrace" : [ {
+      "step" : 2,
+      "type" : "VALIDATION",
+      "name" : "OUTPUT_VALIDATION",
+      "input" : null,
+      "output" : "facts[0] 的 source 或 statement 无法绑定到本次证据",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null,
+      "totalTokens" : null,
+      "status" : "REJECTED"
+    }, {
+      "step" : 2,
+      "type" : "VALIDATION",
+      "name" : "REPAIR",
+      "input" : null,
+      "output" : "输出契约或业务证据校验失败，发起唯一一次修复",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null,
+      "totalTokens" : null,
+      "status" : "STARTED"
+    }, {
+      "step" : 3,
+      "type" : "VALIDATION",
+      "name" : "OUTPUT_VALIDATION",
+      "input" : null,
+      "output" : "facts[0] 的 source 或 statement 无法绑定到本次证据",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null,
+      "totalTokens" : null,
+      "status" : "REJECTED"
+    }, {
+      "step" : 3,
+      "type" : "VALIDATION",
+      "name" : "REPAIR",
+      "input" : null,
+      "output" : "唯一一次修复后的报告未通过校验",
+      "elapsedMs" : 0,
+      "promptTokens" : null,
+      "completionTokens" : null,
+      "totalTokens" : null,
+      "status" : "FAILED"
+    } ],
+    "report" : {
+      "status" : "FAILED",
+      "summary" : "未能生成可用的结构化诊断报告。",
+      "facts" : [ ],
+      "hypotheses" : [ ],
+      "nextActions" : [ ],
+      "missingInformation" : [ ]
+    },
+    "runResult" : {
+      "status" : "FAILED",
+      "answer" : "模型未按要求返回有效的结构化诊断报告。",
+      "completedSteps" : 3,
+      "trace" : [ {
+        "step" : 0,
+        "type" : "RAG",
+        "name" : "kafka-consumer-lag.md",
+        "input" : "rank=1",
+        "output" : "chunkIndex=3\nscore=0.5819814801216125\ncontent=# Kafka Consumer Lag 排查指南\n\n## 3. 常见原因\n\nKafka 消费积压常见原因包括：\n\n* Consumer 数量不足；\n* Partition 并行度不足；\n* 单条消息处理时间增加；\n* Consumer 实例异常或频繁 Rebalance；\n* Partition 流量分布不均；\n* Consumer 所在服务处理能力下降。\n\nKafka Lag 通常只是“消费速度不足”的表现，不能仅凭 Lag 判断具体根因。\n",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "HIT"
+      }, {
+        "step" : 0,
+        "type" : "RAG",
+        "name" : "mysql-slow-query.md",
+        "input" : "rank=2",
+        "output" : "chunkIndex=5\nscore=0.5520759522914886\ncontent=# MySQL 慢查询排查指南\n\n## 6. 判断原则\n\n如果观察到：\n\n```text\nDB P99 明显升高\nactiveConnections 接近 maximumPoolSize\npendingThreads 增长\n```\n\n可以判断数据库响应变慢已经开始影响连接池和上游请求。\n\n但不能仅凭这些指标确认一定是缺少索引、锁等待或某一条 SQL 导致。\n\n这些根因需要继续通过 SQL 和数据库指标验证。\n",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "HIT"
+      }, {
+        "step" : 0,
+        "type" : "RAG",
+        "name" : "thread-pool-exhaustion.md",
+        "input" : "rank=3",
+        "output" : "chunkIndex=4\nscore=0.529904842376709\ncontent=# Java 线程池饱和排查指南\n\n## 4. 推荐排查顺序\n\n首先检查：\n\n```text\nthreadPoolActive\nthreadPoolMax\nqueueSize\n```\n\n确认饱和是否持续存在。\n\n其次检查是否出现：\n\n```text\nTaskRejectedException\nRejectedExecutionException\n```\n\n然后检查单任务平均耗时和 P95/P99，判断任务处理时间是否明显增长。\n\n最后再检查 RPC、数据库、CPU 或业务流量，寻找导致任务变慢或变多的真正原因。\n",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "HIT"
+      }, {
+        "step" : 1,
+        "type" : "MODEL",
+        "name" : "chatModel.call",
+        "input" : "contextMessages=2",
+        "output" : "[getServiceStatus({\"serviceName\":\"payment-service\"}), getKafkaStatus({\"topic\":\"order-topic\"}), getDependencyStatus({\"serviceName\":\"payment-service\"}), queryErrorLogs({\"serviceName\":\"payment-service\",\"minutes\":30})]",
+        "elapsedMs" : 2588,
+        "promptTokens" : 2905,
+        "completionTokens" : 267,
+        "totalTokens" : 3172,
+        "status" : "SUCCESS"
+      }, {
+        "step" : 1,
+        "type" : "TOOL",
+        "name" : "getServiceStatus",
+        "input" : "{\"serviceName\":\"payment-service\"}",
+        "output" : "{\"serviceName\":\"payment-service\",\"cpuPercent\":55.0,\"memoryPercent\":68.0,\"threadPoolActive\":200,\"threadPoolMax\":200,\"healthy\":true}",
+        "elapsedMs" : 8,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "SUCCESS, attempt=1"
+      }, {
+        "step" : 1,
+        "type" : "TOOL",
+        "name" : "getKafkaStatus",
+        "input" : "{\"topic\":\"order-topic\"}",
+        "output" : "{\"topic\":\"order-topic\",\"lag\":125000,\"produceRate\":5000,\"consumeRate\":2800,\"consumerCount\":3}",
+        "elapsedMs" : 2,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "SUCCESS, attempt=1"
+      }, {
+        "step" : 1,
+        "type" : "TOOL",
+        "name" : "getDependencyStatus",
+        "input" : "{\"serviceName\":\"payment-service\"}",
+        "output" : "{\"serviceName\":\"payment-service\",\"database\":{\"p99Ms\":30.0,\"activeConnections\":10,\"maxConnections\":50},\"rpc\":{\"dependency\":\"payment-gateway\",\"p99Ms\":80.0,\"timeoutRate\":0.001}}",
+        "elapsedMs" : 3,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "SUCCESS, attempt=1"
+      }, {
+        "step" : 1,
+        "type" : "TOOL",
+        "name" : "queryErrorLogs",
+        "input" : "{\"serviceName\":\"payment-service\",\"minutes\":30}",
+        "output" : "[{\"level\":\"ERROR\",\"message\":\"TaskRejectedException: executor queue is full\"}]",
+        "elapsedMs" : 2,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "SUCCESS, attempt=1"
+      }, {
+        "step" : 1,
+        "type" : "CONTEXT",
+        "name" : "conversationHistory",
+        "input" : "messages=2",
+        "output" : "messages=5",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "UPDATED"
+      }, {
+        "step" : 2,
+        "type" : "MODEL",
+        "name" : "chatModel.call",
+        "input" : "contextMessages=5",
+        "output" : "{\n  \"facts\": [\n    {\n      \"source\": \"getServiceStatus\",\n      \"statement\": \"payment-service 线程池完全饱和：threadPoolActive=200, threadPoolMax=200 (TOOL-1)\"\n    },\n    {\n      \"source\": \"getKafkaStatus\",\n      \"statement\": \"order-topic 消费积压严重：lag=125000，生产速率 5000/秒，消费速率 2800/秒 (TOOL-2)\"\n    },\n    {\n      \"source\": \"getDependencyStatus\",\n      \"statement\": \"数据库 P99=30ms，activeConnections=10/50；RPC P99=80ms，timeoutRate=0.001 (TOOL-3)\"\n    },\n    {\n      \"source\": \"queryErrorLogs\",\n      \"statement\": \"错误日志显示 TaskRejectedException: executor queue is full (TOOL-4)\"\n    }\n  ],\n  \"hypotheses\": [\n    {\n      \"cause\": \"payment-service 自身处理能力下降导致线程池饱和，无法及时处理消费任务，造成 Kafka 积压\",\n      \"confidence\": 0.9,\n      \"evidence\": [\n        \"threadPoolActive=200 等于 threadPoolMax=200，线程池完全饱和 (TOOL-1)\",\n        \"TaskRejectedException: executor queue is full 表明任务被拒绝 (TOOL-4)\",\n        \"消费速率 2800/秒明显低于生产速率 5000/秒，导致 lag=125000 (TOOL-2)\"\n      ]\n    },\n    {\n      \"cause\": \"数据库或 RPC 依赖未成为瓶颈\",\n      \"confidence\": 0.95,\n      \"evidence\": [\n        \"DB P99=30ms，activeConnections=10/50，未达到饱和阈值 (TOOL-3)\",\n        \"RPC P99=80ms，timeoutRate=0.001，超时率极低 (TOOL-3)\"\n      ]\n    }\n  ],\n  \"missingInformation\": [\n    \"单条消息平均处理耗时\",\n    \"线程池队列大小 queueSize\"\n  ],\n  \"nextActions\": [\n    {\n      \"description\": \"检查 payment-service 消费任务代码逻辑，确认是否存在慢查询或复杂业务处理导致单条消息耗时增加\",\n      \"requiresApproval\": false\n    },\n    {\n      \"description\": \"考虑临时扩容 consumerCount 或调整线程池配置以缓解积压\",\n      \"requiresApproval\": true\n    }\n  ],\n  \"status\": \"DIAGNOSED\",\n  \"summary\": \"payment-service 自身处理能力下降（线程池完全饱和）是 order-topic 消费变慢的根因。DB 和 RPC 依赖指标正常，排除外部依赖问题。积压是处理能力不足的结果而非原因。\"\n}",
+        "elapsedMs" : 10302,
+        "promptTokens" : 3459,
+        "completionTokens" : 1164,
+        "totalTokens" : 4623,
+        "status" : "SUCCESS"
+      }, {
+        "step" : 2,
+        "type" : "VALIDATION",
+        "name" : "OUTPUT_VALIDATION",
+        "input" : null,
+        "output" : "facts[0] 的 source 或 statement 无法绑定到本次证据",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "REJECTED"
+      }, {
+        "step" : 2,
+        "type" : "VALIDATION",
+        "name" : "REPAIR",
+        "input" : null,
+        "output" : "输出契约或业务证据校验失败，发起唯一一次修复",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "STARTED"
+      }, {
+        "step" : 3,
+        "type" : "MODEL",
+        "name" : "chatModel.call",
+        "input" : "contextMessages=8",
+        "output" : "{\n  \"facts\": [\n    {\n      \"source\": \"getServiceStatus\",\n      \"statement\": \"payment-service: threadPoolActive=200, threadPoolMax=200 (TOOL-1)\"\n    },\n    {\n      \"source\": \"getKafkaStatus\",\n      \"statement\": \"order-topic: lag=125000, produceRate=5000, consumeRate=2800 (TOOL-2)\"\n    },\n    {\n      \"source\": \"getDependencyStatus\",\n      \"statement\": \"database p99Ms=30.0, activeConnections=10/maxConnections=50; rpc p99Ms=80.0, timeoutRate=0.001 (TOOL-3)\"\n    },\n    {\n      \"source\": \"queryErrorLogs\",\n      \"statement\": \"ERROR TaskRejectedException: executor queue is full (TOOL-4)\"\n    }\n  ],\n  \"hypotheses\": [\n    {\n      \"cause\": \"payment-service 线程池饱和导致消费任务处理延迟，造成 Kafka 积压\",\n      \"confidence\": 0.9,\n      \"evidence\": [\n        \"threadPoolActive=200 等于 threadPoolMax=200 (TOOL-1)\",\n        \"TaskRejectedException: executor queue is full (TOOL-4)\",\n        \"consumeRate=2800 低于 produceRate=5000，lag=125000 (TOOL-2)\"\n      ]\n    },\n    {\n      \"cause\": \"数据库和 RPC 依赖未成为瓶颈\",\n      \"confidence\": 0.95,\n      \"evidence\": [\n        \"database p99Ms=30.0, activeConnections=10/maxConnections=50 (TOOL-3)\",\n        \"rpc p99Ms=80.0, timeoutRate=0.001 (TOOL-3)\"\n      ]\n    }\n  ],\n  \"missingInformation\": [\n    \"单条消息平均处理耗时\",\n    \"线程池队列大小 queueSize\"\n  ],\n  \"nextActions\": [\n    {\n      \"description\": \"检查 payment-service 消费任务代码逻辑，确认是否存在慢查询或复杂业务处理导致单条消息耗时增加\",\n      \"requiresApproval\": false\n    },\n    {\n      \"description\": \"考虑临时扩容 consumerCount 或调整线程池配置以缓解积压\",\n      \"requiresApproval\": true\n    }\n  ],\n  \"status\": \"DIAGNOSED\",\n  \"summary\": \"payment-service 自身处理能力下降（线程池完全饱和）是 order-topic 消费变慢的根因。DB 和 RPC 依赖指标正常，排除外部依赖问题。积压是处理能力不足的结果而非原因。\"\n}",
+        "elapsedMs" : 10825,
+        "promptTokens" : 3595,
+        "completionTokens" : 1157,
+        "totalTokens" : 4752,
+        "status" : "SUCCESS"
+      }, {
+        "step" : 3,
+        "type" : "VALIDATION",
+        "name" : "OUTPUT_VALIDATION",
+        "input" : null,
+        "output" : "facts[0] 的 source 或 statement 无法绑定到本次证据",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "REJECTED"
+      }, {
+        "step" : 3,
+        "type" : "VALIDATION",
+        "name" : "REPAIR",
+        "input" : null,
+        "output" : "唯一一次修复后的报告未通过校验",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "FAILED"
+      }, {
+        "step" : 3,
+        "type" : "STOP",
+        "name" : "AgentRunner",
+        "input" : null,
+        "output" : "Structured diagnosis output rejected after repair",
+        "elapsedMs" : 0,
+        "promptTokens" : null,
+        "completionTokens" : null,
+        "totalTokens" : null,
+        "status" : "STOP"
+      } ],
+      "report" : {
+        "status" : "FAILED",
+        "summary" : "未能生成可用的结构化诊断报告。",
+        "facts" : [ ],
+        "hypotheses" : [ ],
+        "nextActions" : [ ],
+        "missingInformation" : [ ]
+      }
+    }
+  } ]
+}

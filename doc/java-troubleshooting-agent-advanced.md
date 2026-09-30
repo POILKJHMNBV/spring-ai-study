@@ -777,10 +777,18 @@ Validator
 
 ### 验收
 
-- [ ] 格式错误可以恢复；
-- [ ] 业务错误能被 Validator 发现；
-- [ ] repair 最大次数受限；
-- [ ] repair 同样进入 Trace / Eval。
+- [x] 格式错误可以恢复（脚本错误与真实模型报告修复均有验证）；
+- [x] 业务错误能被 Validator 发现（置信度、完整工具事实、知识引用与已知指标缺失冲突）；
+- [x] repair 最大次数受限（空正文与输出错误共享一次恢复预算，仍受六步上限限制）；
+- [x] repair 同样进入 Trace / Eval（记录启动、成功、失败及步数不足）。
+
+实现、官方依据、29 项专项单测与真实 PostgreSQL/pgvector/Ollama 验收见
+[Day15 实验记录](experiments/day15-output-validation.md)。
+用户反馈校验阻塞后的[详细修复计划](experiments/day15-validation-fix-plan.md)和
+[最终复测与子 Agent 评估](experiments/day15-validation-fix-results.md)补充了证据编号、
+同来源完整快照等价引用、缺失信息误判修复以及修复阶段生成预算；
+2026-09-30 本机 JDK 17 编译、47 项 Day15 单测和真实 PG/模型的 5 个集成场景通过。
+缺失信息检查覆盖明确字段与有限中文别名，不代表任意自然语言矛盾或因果正确性已被证明。
 
 ---
 
