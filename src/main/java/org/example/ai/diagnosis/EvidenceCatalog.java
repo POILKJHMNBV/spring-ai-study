@@ -27,6 +27,19 @@ import java.util.stream.Collectors;
 public final class EvidenceCatalog {
 
     /**
+     * 可作为实时事实来源的工具白名单。
+     *
+     * <p>提案创建、审批或执行回执都属于控制面事件，不是运行指标；即使它们在 Trace 中以成功
+     * Tool 事件出现，也不能被报告引用为服务或 Kafka 的观察证据。</p>
+     */
+    private static final Set<String> EVIDENCE_TOOL_ALLOWLIST = Set.of(
+            "getKafkaStatus",
+            "getServiceStatus",
+            "getDependencyStatus",
+            "queryErrorLogs"
+    );
+
+    /**
      * 模型引用知识库文本时必须使用的显式前缀。
      */
     public static final String KNOWLEDGE_REFERENCE_PREFIX = "知识引用：";
@@ -106,7 +119,8 @@ public final class EvidenceCatalog {
             for (TraceRecorder.TraceEvent event : trace) {
                 if (event == null || event.type() != TraceRecorder.EventType.TOOL
                         || !isSuccessfulToolStatus(event.status())
-                        || event.name() == null || event.output() == null) {
+                        || event.name() == null || event.output() == null
+                        || !EVIDENCE_TOOL_ALLOWLIST.contains(event.name())) {
                     continue;
                 }
                 try {

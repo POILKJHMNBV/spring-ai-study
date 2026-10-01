@@ -1,0 +1,18 @@
+{
+  "testedAt" : "2026-09-30T20:59:16.068601100+08:00",
+  "chatModel" : "SCRIPTED_CHAT_MODEL",
+  "result" : "PASSED",
+  "isolatedSchema" : "day16_it_40c696b1973242d88f74f4111ddcb5b8",
+  "postgresVersion" : "15.19",
+  "pgvectorVersion" : "0.7.2",
+  "embeddingModel" : "bge-m3",
+  "retrievedCount" : 3,
+  "agentStatus" : "COMPLETED",
+  "diagnosisStatus" : "INSUFFICIENT_EVIDENCE",
+  "modelCalls" : 2,
+  "proposalId" : "9fef55ce-ec8a-43e7-92ef-f755252e3b49",
+  "approvalRequired" : true,
+  "executionStatus" : "SIMULATED_EXECUTION",
+  "auditEvents" : [ "PROPOSED", "APPROVED", "EXECUTED" ],
+  "schemaCleaned" : true
+}

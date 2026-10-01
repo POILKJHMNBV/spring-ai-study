@@ -259,7 +259,9 @@ public class AgentRunner {
 
         // 在原有配置基础上增加 ToolCallbacks
         OllamaChatOptions options = baseOptions.mutate()
-                .toolCallbacks(guardedCallbacks)
+                // Spring AI 2.0 的 List 重载会替换默认回调；使用显式 List，防止配置中预置的
+                // 未受本次 ExecutionPolicy 保护的审批/执行工具混入模型请求。
+                .toolCallbacks(Arrays.asList(guardedCallbacks))
                 .build();
 
         // RAG

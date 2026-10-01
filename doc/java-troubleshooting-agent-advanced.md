@@ -832,10 +832,15 @@ SIMULATED_EXECUTION
 
 ### 验收
 
-- [ ] LLM 无法绕过 Approval；
-- [ ] rejected action 不会进入 Executor；
-- [ ] proposal 与 execution 分离；
-- [ ] 所有审批有 audit record。
+- [x] LLM 无法绕过 Approval（模型仅开放提案工具；审批与执行由可信 Java 宿主调用）；
+- [x] rejected action 不会进入 Executor（未批准、拒绝、重复及失败终态均受服务端状态检查）；
+- [x] proposal 与 execution 分离（批准本身不执行，执行器只返回 SIMULATED_EXECUTION）；
+- [x] 所有审批有 audit record（包括未知 ID、无效身份和重复审批等被拒绝的尝试）。
+
+实现、官方依据、使用示例与子 Agent 评估见 [Day16 实验记录](experiments/day16-human-approval.md)。
+2026-09-30 本机 JDK 17 编译、11 项专项单测和 1 项真实 PostgreSQL/pgvector 集成测试通过；
+聊天模型使用确定性脚本，Embedding 使用真实 BGE-M3。审批和审计暂存内存，人工入口依赖可信宿主，
+不代表已完成身份认证、RBAC 或持久化审批。
 
 ---
 

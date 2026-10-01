@@ -3,7 +3,9 @@ package org.example.ai.tool;
 import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
 import org.springframework.ai.support.ToolCallbacks;
 import org.springframework.ai.tool.ToolCallback;
+import org.example.ai.approval.ActionProposalTools;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -20,8 +22,8 @@ import java.util.Locale;
  *
  * <p>两种模式：
  * <ul>
- *   <li>LOCAL：所有工具来自本地 {@link OpsTools}，沿用 Day2~Day6 行为</li>
- *   <li>MCP：getKafkaStatus 来自远程 MCP Server，其他工具仍来自本地</li>
+ *   <li>LOCAL：只读运维工具来自本地 {@link OpsTools}，并附带本地提案工具</li>
+ *   <li>MCP：getKafkaStatus 来自远程 MCP Server，其他只读工具和提案工具仍来自本地</li>
  * </ul>
  * </p>
  *
@@ -51,6 +53,9 @@ public class AgentToolProvider {
 
     private final OpsTools opsTools;
 
+    /** 唯一允许 Agent 创建提案的工具；审批和执行服务本身不作为工具对象传入。 */
+    private final ActionProposalTools actionProposalTools;
+
     /**
      * 使用 {@link ObjectProvider} 而非强依赖。
      * 默认 LOCAL 模式下 MCP Client 被关闭，此时应用仍必须能够正常启动和运行。
@@ -60,19 +65,48 @@ public class AgentToolProvider {
     /** 应用默认 Kafka 工具模式，从配置 {@code app.kafka-tool-mode} 读取。 */
     private final KafkaToolMode defaultMode;
 
+    /**
+     * 保留旧的手工构造入口，适用于尚未装配 Day16 提案工具的独立调用方。
+     *
+     * @param opsTools 只读运维工具
+     * @param mcpToolCallbackProvider 可选 MCP Kafka 工具提供器
+     * @param kafkaToolMode 默认 Kafka 工具来源模式
+     */
     public AgentToolProvider(
             OpsTools opsTools,
             ObjectProvider<SyncMcpToolCallbackProvider> mcpToolCallbackProvider,
             @Value("${app.kafka-tool-mode:LOCAL}") String kafkaToolMode
     ) {
 
+        this(opsTools, mcpToolCallbackProvider, kafkaToolMode, null);
+    }
+
+    /**
+     * Spring 主构造器：只注册只读运维工具和提案工具，不注册审批或执行入口。
+     *
+     * @param opsTools 只读运维工具
+     * @param mcpToolCallbackProvider 可选 MCP Kafka 工具提供器
+     * @param kafkaToolMode 默认 Kafka 工具来源模式
+     * @param actionProposalTools 创建待审批提案的本地工具
+     */
+    @Autowired
+    public AgentToolProvider(
+            OpsTools opsTools,
+            ObjectProvider<SyncMcpToolCallbackProvider> mcpToolCallbackProvider,
+            @Value("${app.kafka-tool-mode:LOCAL}") String kafkaToolMode,
+            ActionProposalTools actionProposalTools
+    ) {
+
         this.opsTools = opsTools;
         this.mcpToolCallbackProvider = mcpToolCallbackProvider;
+        this.actionProposalTools = actionProposalTools;
         this.defaultMode = KafkaToolMode.valueOf(kafkaToolMode.trim().toUpperCase(Locale.ROOT));
     }
 
     /**
      * 返回应用配置的默认模式。
+     *
+     * @return 从 app.kafka-tool-mode 读取并解析的 LOCAL 或 MCP 模式
      */
     public KafkaToolMode defaultMode() {
         return defaultMode;
@@ -86,10 +120,10 @@ public class AgentToolProvider {
      */
     public ToolCallback[] getToolCallbacks(KafkaToolMode mode) {
 
-        ToolCallback[] localCallbacks = ToolCallbacks.from(opsTools);
+        ToolCallback[] localCallbacks = localToolCallbacks();
 
         /*
-         * LOCAL 模式完全保留 Day6 行为。
+         * LOCAL 模式只使用本地 Tool，包含本地只读工具和提案工具。
          */
         if (mode == KafkaToolMode.LOCAL) {
             return localCallbacks;
@@ -153,8 +187,22 @@ public class AgentToolProvider {
     }
 
     /**
+     * 创建当前允许给模型使用的本地工具回调集合。
+     *
+     * @return 四个只读工具及一个仅创建提案的工具；兼容旧手工构造器时只返回只读工具
+     */
+    private ToolCallback[] localToolCallbacks() {
+        return actionProposalTools == null
+                ? ToolCallbacks.from(opsTools)
+                : ToolCallbacks.from(opsTools, actionProposalTools);
+    }
+
+    /**
      * 输出 MCP Server 实际发现的 Tool 名，
      * 方便排查工具发现问题。
+     *
+     * @param callbacks MCP Server 返回的工具回调
+     * @return 工具回调的名称列表
      */
     private List<String> discoveredToolNames(ToolCallback[] callbacks) {
 
