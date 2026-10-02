@@ -1,0 +1,510 @@
+[
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\mcp-kafka-server\\src\\main\\resources\\application.yaml",
+    "Hash": "7677EDD948F4260DDA5E0B35F4B11B5F74DCBA6AFD8A84DF48C73212C7049943"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\mcp-kafka-server\\src\\main\\java\\org\\example\\kafkamcp\\McpKafkaServerApplication.java",
+    "Hash": "F61A61BF32FD090F4B14E5F1DD29A501703E40E656D673C13925A62C50D333E1"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\mcp-kafka-server\\src\\main\\java\\org\\example\\kafkamcp\\KafkaStatus.java",
+    "Hash": "9C6295D687CAE2BD22F04E2739DD167B5FF0E0770A92F46329CB95EE2B3AA3D6"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\mcp-kafka-server\\src\\main\\java\\org\\example\\kafkamcp\\KafkaMcpTools.java",
+    "Hash": "0F6FB83B7AF2F65729079EEE06C571AC01D56FF3F6BFA7A8AF359150036C224B"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\service-observer\\src\\main\\resources\\application.yaml",
+    "Hash": "FA15A74167C57DBE17671C3CE4D2DFF3217884133CE604F896D2A22D777F928C"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\service-observer\\src\\test\\java\\org\\example\\observer\\ServiceObserverApplicationTests.java",
+    "Hash": "22BEDFD5D9B4DCB68CAC61F2E1C4025886B0CF81B215044BD70C51A77B802313"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\service-observer\\src\\test\\java\\org\\example\\observer\\DependencyEndpointTest.java",
+    "Hash": "8C3FA1C7B92BE39A4866108B318B02AFBD56E3A238FD03968A77EAE60C78B6DF"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\service-observer\\src\\main\\java\\org\\example\\observer\\ServiceObserverController.java",
+    "Hash": "A98177B0D8DD417BDDDC09D9A19748608BBB4CAB6E89D7987C7B3445968CC4F1"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\service-observer\\src\\main\\java\\org\\example\\observer\\ServiceObserverApplication.java",
+    "Hash": "83BACD742573856ABE903918894E01654F709B455523E4E16B98A5822BB40FB9"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\service-observer\\src\\main\\java\\org\\example\\observer\\Day8ResponseMode.java",
+    "Hash": "DDD4EA0BFB3119E3C93FD24F94FC28C365BC09502B3B1B0748D2BF80FF5DEAA8"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\resources\\application-mcp.yaml",
+    "Hash": "76B31282D7A312C8D2DB3A79F90554CB2B34A9BAEB6F422329E652C1DC2604F3"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\resources\\application-local.yaml",
+    "Hash": "51DC6E48DF3D0E33012459F033F4A91883D83B76802127FE4B36F752D2C2D803"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\resources\\application.yaml",
+    "Hash": "DC5CEDE298229CCCB255342B31BCB18719504472A044313D59CFF7EDF75C2E7F"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\tool\\client\\HttpServiceMetricsClientTest.java",
+    "Hash": "D5E071E55B77648718771876FACD116FB6EE94CC66D5861E872EAA96011184B1"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\tool\\client\\HttpDependencyMetricsClientTest.java",
+    "Hash": "1227883C068A469747F436A0E337046052E2F014366B472A4955E3D0B40784B0"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\SpringAiStudyApplicationTests.java",
+    "Hash": "1620A0B096E723E7B97D3ED44B466046C4E4EEC7C4FA615BC1E88D82406C1F3E"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\eval\\StructuredAgentEvaluatorTest.java",
+    "Hash": "3C6ABF45BA2EF2F8249CC5C9E478B1E99DD057F94AFA546D5DE99DD0C43B31B8"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\eval\\SecurityEvaluationIT.java",
+    "Hash": "4704570407A9A775F0F0AAC09B9F644F3919C43845C84BF27158072530524AE2"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\eval\\RetrievalMetricsTest.java",
+    "Hash": "28A3D0ACC0C6DB266E33A754D6C8C69E8009761F2162B56A0251496825B31CE6"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\eval\\RetrievalMetrics.java",
+    "Hash": "B99D3F9E60BD8E4F0B4E53F6C0D278C6C2FD5CADAC6B4FD33D151895C5DF0691"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\eval\\RetrievalEvaluationIT.java",
+    "Hash": "EF231E15145DB26B981E94EA8FCC46D3A7DDF814EF6DA4BAF201B8592D859AE7"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\eval\\RetrievalCases.java",
+    "Hash": "6D208FF89ED2D6D6B287D0F042D7F65ECF1558FD22936A09D2ABEA64131FE9AE"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\eval\\DependencyEvidenceAuditTest.java",
+    "Hash": "FE6BF0B375D5A944FBC890FB7E7FF70E1167E774618D84A24B899EFC3AC0708F"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\eval\\Day7McpComparisonIT.java",
+    "Hash": "3FB5E70D3A1BF6DD94BB04B6A080844ED1E6EA9FD5A9EB788076A14D113AD80F"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\eval\\Day16ApprovalFlowIT.java",
+    "Hash": "F130ECCE5B48B1449273EC92139536D4A49FF90B8F7C842DE69E3D4AC0A11614"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\eval\\Day15OutputValidationIT.java",
+    "Hash": "0741B317D4C6025F8F8B562A3127F33F24C46AFBDA70F8C2DAF9A93FDE33C1AC"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\eval\\Day14StructuredOutputIT.java",
+    "Hash": "EA4DF5805C938BDA20A418ADF70E3CF67D5C15DFA7F992DD9F75B8986E10F706"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\eval\\Day13ObservabilityIT.java",
+    "Hash": "D1DE70DDBE2BA5B817AF9A692025A285EA45CAB4ACC96084D941E2E144359079"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\eval\\Day13McpObservabilityIT.java",
+    "Hash": "72E75EF00C8CB91C7C8AA36F80286D1D12150E0D6F9596190E28A46B3044A80A"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\eval\\Day10DependencyIT.java",
+    "Hash": "0A6946879C14440A72F66C8F21639A186BA9FA285F5B7576E1E5314289C69696"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\eval\\AgentEvaluator.java",
+    "Hash": "704CFFF92BA3B2ED81CF5C4CFDE2CC7244924378EB696F6AAE5DC48543082394"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\eval\\AgentEvaluationIT.java",
+    "Hash": "A62064DB4B1D425196BDA5927BA844CAFBB0594FE47F3C6AE86ED7561AFB6A87"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\eval\\AgentEvalCases.java",
+    "Hash": "B37B4300927E67A7641803A1D498CFD3ECF2DE8782422BF1BCD16A408D16CB47"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\security\\Day17SecurityTest.java",
+    "Hash": "5A16A4CF107AF3F9EB178228808D099426EE5507A8D98A615F88695D2C75B01F"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\security\\Day17BoundaryAuditTest.java",
+    "Hash": "71E83583D5A1DDC37BAFEEB68F1401F42CA810C998C7281C639A122A14AE0DD5"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\diagnosis\\Day15ValidationRegressionTest.java",
+    "Hash": "988EFE34F63F36C7DF9E63D1E81DB49D6D6A9C1ABF3801292577E2D18D4A89AB"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\diagnosis\\Day15OutputValidationTest.java",
+    "Hash": "BA97A77893400D54D8C009D43F482A403632D9ECC9FF0CA660E1DAC212A748A8"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\diagnosis\\Day15EvidenceBoundaryTest.java",
+    "Hash": "AE7CD8D0358B547A3790EDA86927A9A08CF7EE3B0EC9D1858982C93867D6F7BA"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\rag\\RagRegressionTest.java",
+    "Hash": "9DCC71342D38CB7A582FFE3EE2A9FBDB56748DC9449377173C19EEEF4E77536B"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\rag\\RagQualityEvaluationTest.java",
+    "Hash": "88601D1938037C8A8F177D5CA2F3B351CCD4538B9750D0E6C015CE78B1B76800"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\rag\\RagEmbeddingEvaluationTest.java",
+    "Hash": "001CFFCD23C2F2E7EB4C587552971B9721104DC2D41ABF5A269D15B27D7E50AC"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\rag\\KnowledgeLoaderTest.java",
+    "Hash": "F2BADDFB0AA3387C4A0BC0AF63167D2C793760F001EF851D3005D102C2CDB0AD"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\rag\\Day12RankingTest.java",
+    "Hash": "59C0C39C0947E479210E36391B27DBFA2A50C6DBE72154079877660C7FB63BE6"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\rag\\Day11PgVectorIT.java",
+    "Hash": "581B0C30254888345F557C43E8BAFFCD3EB0CABE04835BBAD8BED586D7CF5A9C"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\rag\\BaselineSectionSplitter.java",
+    "Hash": "5BACAEBCA5A268C7BB198421C41C3E640EEE76C368A1000063D8C0B158016E65"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\controller\\ChatControllerStructuredJsonTest.java",
+    "Hash": "6C74C9A39783D6A9A67838ED9592842BEED7AD7BB62176D34DD035B0F95B0C4E"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\OpsTools.java",
+    "Hash": "9425F60112BCF6AE4A8054F233070BD1E11CE8D31DD69130B5997F2A08B82477"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\harness\\ToolRecoveryTest.java",
+    "Hash": "0A81BFC0093257B42B15518A1B880FDB5D8FB5A7918A8FA7A2A2B8AEF1D6054D"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\harness\\ToolFailureTest.java",
+    "Hash": "380EEF031A226B1A54787DCE8ED6753ED31E277259897C7570F3C2ADDBA77949"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\harness\\StructuredOutputContractTest.java",
+    "Hash": "669B13BCE1A7D58B9EB88EF45400E11E8804EB74D5DE1A457C6C984D3793AB0A"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\harness\\EmptyAnswerRecoveryTest.java",
+    "Hash": "CA476763F576DE86DB52C99C3B9A1C963D788FBAB7215B13D80524A2AFC0D41D"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\harness\\DependencyEvidenceTest.java",
+    "Hash": "66FEB6E0D0CA4C1B39BF51B5CCE5B2186C9865629C90F1F97C44838F7B8C2918"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\harness\\Day15OutputRepairTest.java",
+    "Hash": "3A36FDECCB88A82124724115AF008F7A0A6B267F5ABBD8BB5A3172D031FBCE62"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\harness\\Day13ToolTelemetryTest.java",
+    "Hash": "B0D2B067FB7CC52EC6D366895322851C8ABD197C91B1B959A538DF2D81B71C0B"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\harness\\Day13AgentTelemetryTest.java",
+    "Hash": "3DA873E36B7AE4971F16DFE830B8BEAA944FF6F57A5C7D65468E63D3D636C3DC"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\test\\java\\org\\example\\ai\\approval\\Day16ApprovalFlowTest.java",
+    "Hash": "552B9268B6BE333FAC3D28F3047614C1B6E24840FF4096D57CA8A71259710D24"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\mock\\OpsMockDataProvider.java",
+    "Hash": "26AEEF9754B4A065DC2E8A798B7BDAD835716F13ECE9265B3CE97EF4B423FD9D"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\mock\\MockScenario.java",
+    "Hash": "ED85E92FE534096A77406E375B1E30D008F993BE749F8463313B7B15343D9E8D"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\KafkaToolMode.java",
+    "Hash": "5056366F90A6EB334169CF6872D4A303111B768DE00199D26342617B161B6E02"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\controller\\RagDebugController.java",
+    "Hash": "D407B2F31804BB03E7EE0027B60CC24C635E58BFCCD4C13C5E0DEE8EB737B478"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\controller\\ChatController.java",
+    "Hash": "DF6021D2E93BBC236A918F8EF2F5F6F4380AFE0D3DBFE639240CDB6958C7F735"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\dto\\ServiceStatus.java",
+    "Hash": "1C7BE50DAF1A98B39357EB7D2C1599458B4ABAED4141BD72D3DDC8F312BA7078"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\dto\\KafkaStatus.java",
+    "Hash": "FF09CFFCCBFA736F036F33EC004E924956296168B20C0DE0EF4BD07A85AED83C"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\dto\\ErrorLog.java",
+    "Hash": "AF49C1D136C5BE8EA678AF38B59B64B241F41B6F96872701820988B226801887"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\dto\\DependencyStatus.java",
+    "Hash": "650EA147A1891AC3345C5DAFD6B4331C3136FA8C70110F5D7F208DC9B13B1A07"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\config\\McpClientConfig.java",
+    "Hash": "629B3D7779787359EF96EF0191B0707E1D7F7E368650609DCCF57FF9E477D8CD"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\config\\CommonConfiguration.java",
+    "Hash": "C2E8956F774FA6911F57312A9BDAA4F3CA9A112DEEFB03EE5E24EC4E6DAA694B"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\rag\\synchronize\\PgKnowledgeIndex.java",
+    "Hash": "CCF75F1F3F3A02B3D761409C187DC4B39FA9529367E196F23DD5ED549AC84348"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\rag\\synchronize\\KnowledgeLoader.java",
+    "Hash": "E03372329AD786E27B1A627B66A3B0F32D71B61BDAC6DED35AA66474890DE9C3"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\rag\\RetrievedChunk.java",
+    "Hash": "C9650989514369CF126F4F8B097893D9029B21BEBD70C31C3F3350059CE33847"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\rag\\RetrievalProperties.java",
+    "Hash": "6740E297751A7D254B29FC427860263F0B9DB30988E0E87103F6ABFA43455803"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\rag\\RetrievalMode.java",
+    "Hash": "E3A6B751BE5FEFF250B3DEF912062BE3C531860ED28BA6067793E38E069FE6F8"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\common\\Constants.java",
+    "Hash": "6357DDB1E6130C94F23FEFD4BAA01A40F49121EF4DEC844674C247DF779139C8"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\client\\ServiceMetricsClient.java",
+    "Hash": "E7E1C12DF9751C435DCD535B0E5C60F610778960DE1D510E4E6EFEE5A8FDDB8E"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\client\\LogQueryClient.java",
+    "Hash": "5B902D333619BEF88ED896C8647491F3C45F928F19514E4D5C1CA5EA5689DF5A"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\client\\InvalidToolResponseException.java",
+    "Hash": "5315249AA05AEC05F211AC44687F0BAF7C1BB4CA2B9D04FF76CCF5F9D9241430"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\rag\\rerank\\TokenCoverageReranker.java",
+    "Hash": "928840B1A652C53C8B05A3B9D9D1391C5A9CE26B0821FA1979253242459B71D9"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\rag\\rerank\\LexicalRrfRanker.java",
+    "Hash": "A78E5652C4C0EC1B7E7B0113DF51269D7CD5FBC2FB10BA82D99BE89CFB5BB9DA"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\rag\\rerank\\DocumentReranker.java",
+    "Hash": "6BE154665B7828C60F3D5E850CBFE38445D8192881A71B4C809AAF756708D551"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\rag\\RagConfig.java",
+    "Hash": "818A7F3537552DD88DF74ED114D87603C5FEF3815DC85435BFD4CDA15A1FA294"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\rag\\MarkdownSectionSplitter.java",
+    "Hash": "1ECCBA6D0A74FDADD56E5EA51B37412A6B3BA2FE01FB263776AF0D29B5DE568C"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\rag\\KnowledgeRetriever.java",
+    "Hash": "18EE3683BB94D1A57A62373D5B4D438ACBD587ADA58D2B052C52303A3D368A54"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\client\\impl\\MockServiceMetricsClient.java",
+    "Hash": "760052C525ADA91DB6C4C5E5E1244FDAD69BC580B6883737102DFF6F223A593E"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\client\\impl\\MockLogQueryClient.java",
+    "Hash": "4159E683B7F4C3E3294CCD5E8A714E16D75445EC396B32E3981A1E44A2C45EC3"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\client\\impl\\MockDependencyMetricsClient.java",
+    "Hash": "ACA9BC9EC892864AF8773C75ECA1DACBB629E57B3A8CF19957FD86024DB81BFF"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\client\\impl\\HttpServiceMetricsClient.java",
+    "Hash": "698AADF15D738EB6AA2B751B4D758630A28E50FABCB032E4A37AE8770D5CB50D"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\client\\impl\\HttpLogQueryClient.java",
+    "Hash": "2A481FBCAC2E1EF99DFE72B1CE019B58754B2F7F24EF80389B5E08B9AD18B490"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\client\\impl\\HttpDependencyMetricsClient.java",
+    "Hash": "58A3ECD0C108DA1ECE3D67A752FD78E816AACD85BF21BF285BCE50366D358500"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\approval\\SimulatedActionExecutor.java",
+    "Hash": "E1BD710F320855448D36597FC1B7CE74DE5F12DCA8F0FAB754AF434C786AD8EC"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\approval\\ProposalStatus.java",
+    "Hash": "4812ED2BFF3DFB8E2295DAB9341F2811D106D66A282B1BBBB4BC9AC3BCFDD886"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\approval\\ApprovalService.java",
+    "Hash": "3CC40ECFC5DE301ABB23D80A0458800619A5539C174B094FBD90323D929D387B"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\approval\\ApprovalDecisionResult.java",
+    "Hash": "3BCD0803856DE6C41329A25DDAA63DFE5CBD60F1EE007754799CCD9F94085884"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\approval\\ApprovalAuditRecord.java",
+    "Hash": "53E8CD27633E4AAF70CC7F1C224F4E042F6066A77D3678B8846EE1AF01BCA53C"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\approval\\ApprovalAuditEvent.java",
+    "Hash": "502F871E59028E161B3C3B840C7E230EB24535B6339A5A48C1DB431539D0EA28"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\approval\\ActionType.java",
+    "Hash": "0E32EB3DF0AA2AC9CC4B83AB70460544E256F7F69EA93EF212BEE46E4150044F"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\approval\\ActionRisk.java",
+    "Hash": "94E08473D98E7CDFE24CD3A1F643FDE07628C2CCFEDBE10135B89E6A798532AD"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\approval\\ActionProposalTools.java",
+    "Hash": "6B94978EED7BE4CAF1ABDC9B08A6D6036EB7298E3E05CADD36885E59AAAE110F"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\approval\\ActionProposal.java",
+    "Hash": "D34F9DC76F9BC7865CDEF7EBAA51EB6AECABCA158AA5D0DE2C5785AABB324A9B"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\approval\\ActionExecutor.java",
+    "Hash": "6A5C85EBEA94E1083CEABD371447B944E8A18CCBF290D66F2598F0C9FF3DDFF2"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\approval\\ActionExecutionStatus.java",
+    "Hash": "8CEEF637B434DA394A1179512CE4098C569B7F7ECBA9DEB1ECB398562C0D7751"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\approval\\ActionExecutionResult.java",
+    "Hash": "2DD9C95D7E7D690DB2D2D6EE03AF110D242BD93EB18D84E78B5BD601AD773508"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\observability\\ObservabilityConfig.java",
+    "Hash": "FF8EC9D500C54B59128E83EAC8EBC43881B1D1660F7479118BF6074C137A7F98"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\observability\\AgentTelemetry.java",
+    "Hash": "F9927A40028895CCAF57F90FC5D479F26C6066D0F16E404A69641745ED38C00E"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\client\\dto\\ServiceStatusHttpResponse.java",
+    "Hash": "2527BBFC812B54267B848FB2BB6E9A5411EE598CFC63FB99BD8A17C3C30487D2"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\client\\dto\\ErrorLogHttpResponse.java",
+    "Hash": "8A5CB76438469ED4DF13FF8F1DB67C95804824337DE570F36F40AE418881D427"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\client\\DependencyMetricsClient.java",
+    "Hash": "68DEF30C9E3BC501BF4488B2263568C5BA3647F37088357798C6F6BA58816177"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\tool\\AgentToolProvider.java",
+    "Hash": "8B91C09DDB2D197D20B63C199CB8CCB6DA960CD58F811D8BCF860CF006918DFB"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\SpringAiStudyApplication.java",
+    "Hash": "48C70F6FC14435A6FB3BE165E6AC2EB69E7D3C4170814589FE5EE8838DD791C9"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\diagnosis\\NextAction.java",
+    "Hash": "F74D1B55B599913964457CEED013B43FAECC11452DA27C963FEC84D178092436"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\diagnosis\\Hypothesis.java",
+    "Hash": "7D9DAA49D1F278D911EEA296BE0BF5F2268D201E0B359CCAF91FDC42E7724CFE"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\diagnosis\\Fact.java",
+    "Hash": "AA1AA2EC03E25BD301BD4B7BB735DD08B80CF1CC88616805B588E8E055E4F1D4"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\diagnosis\\EvidenceCatalog.java",
+    "Hash": "17825FE3F06D322F9DBFB8F3FC8DDB01F5A249D01FE2CF80B9F9C367BFD0CB3B"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\diagnosis\\DiagnosisStatus.java",
+    "Hash": "1F0AB81C128F2358F073CC2AA7C1EF3450079E8BAB32BD999ACCAA203478985A"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\diagnosis\\DiagnosisReportValidator.java",
+    "Hash": "789F4433DA1AC918ADAFCBD60A38877BA73A4064C705EF85D46A5F3D49CE7EF3"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\diagnosis\\DiagnosisReport.java",
+    "Hash": "108907FAE5923B0A29423CB3B655406F6B83276F33151993408F36305149008A"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\harness\\AgentRunner.java",
+    "Hash": "DC19F9A2F8C4D359587A029CFE2A25836D20BD4DF257CD52CD6D3887DD8EFEFE"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\harness\\AgentRunResult.java",
+    "Hash": "6468043C73434ACF4EBFA8FAB8554A8031ACF02759D4FF5D563660F3994ED45B"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\harness\\ExecutionPolicy.java",
+    "Hash": "8D2F502FE3A59D26FD44D1DEB40377D74C5EF0301160A07D26DAA3109EBFED7E"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\harness\\TraceRecorder.java",
+    "Hash": "3BE9795FC75C25ADB1EFE74191D73A3AE1F624F84E5086F76CD6D3120B580A82"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\harness\\ToolFailure.java",
+    "Hash": "6B74C4ACB31F0109BE45C8FEC4C712E2F4EA5E77A281717D774DA229C3F094EB"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\harness\\ToolErrorType.java",
+    "Hash": "FD5089532CF36CED5C6E12E4F8BEC3609BB8C02E42CDCF119FFA6B03A79CC079"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\harness\\GuardedToolCallback.java",
+    "Hash": "379DE4E7F9326981F5E7387C5B12F9DFD1978B8E8F71F6852696F4BF4B5D3633"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\service\\ChatService.java",
+    "Hash": "83DBF6578966661E9C838F37C3783C453E73D35CBCB7BF4C4860571EB583CF25"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\src\\main\\java\\org\\example\\ai\\security\\ConversationSecurity.java",
+    "Hash": "F6883180D736D8D4B44CE6F1E6F59B06FBD265CE0C962187DA6C62E0537FA88D"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\pom.xml",
+    "Hash": "CCA872D5F664492075E1099D843756F8BB4F475223171D571A9E63115E1030F2"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\service-observer\\pom.xml",
+    "Hash": "93647606322207FFFEB2C5A924475144FB66B081AE9F37CAAC7BF1DC578CD695"
+  },
+  {
+    "Path": "D:\\study\\Java\\practice\\spring-ai-study\\mcp-kafka-server\\pom.xml",
+    "Hash": "E1C56D6CDDD5510F72A370C8ECF377FF797569B8B28D9669F6ABB9E90C158BB6"
+  }
+]

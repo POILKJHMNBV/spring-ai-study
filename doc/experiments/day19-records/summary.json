@@ -1,0 +1,869 @@
+{
+  "acceptance": "PARTIAL_NOT_COMPLETE",
+  "manualReview": {
+    "D19-N02": "摘要将 Kafka 消费不足与线程池耗尽定为共同根因，缺少独立消费能力瓶颈证据；N01 同场景只判线程池直接瓶颈。",
+    "D19-M05": "未执行要求的 getDependencyStatus；初稿编造 DB/RPC 指标被拦截，修复报告仍在 summary 引用未在本轮查询的 Kafka 历史数值。",
+    "D19-M01": "setup 成功，但正式轮未查工具，复用 Memory 内容作为本轮 fact，source 连续两次校验失败。",
+    "D19-N04": "断言消费不足导致积压再耗尽线程池，并推荐扩容 Consumer；缺少因果证据，现有证据首先证明线程池饱和与拒绝。",
+    "D19-R03": "未知问题召回线程池知识块，负例检索不满足零命中；最终回答能说明无相关条目，回答降级有效。",
+    "D19-R02": "未知问题召回 3 个 DB 知识块，报告知识事实连续两次校验失败，FAILED。"
+  },
+  "cases": [
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-N01",
+      "failedChecks": [],
+      "elapsedMs": 17820,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 3,
+      "category": "正常故障",
+      "trajectory": "results.json -> results[id=D19-N01].response.trace"
+    },
+    {
+      "finalVerdict": "FAIL",
+      "id": "D19-N02",
+      "failedChecks": [],
+      "elapsedMs": 21657,
+      "status": "COMPLETED",
+      "reason": "摘要将 Kafka 消费不足与线程池耗尽定为共同根因，缺少独立消费能力瓶颈证据；N01 同场景只判线程池直接瓶颈。",
+      "automaticVerdict": "PASS",
+      "steps": 4,
+      "category": "正常故障",
+      "trajectory": "results.json -> results[id=D19-N02].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-N03",
+      "failedChecks": [],
+      "elapsedMs": 5832,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 2,
+      "category": "正常故障",
+      "trajectory": "results.json -> results[id=D19-N03].response.trace"
+    },
+    {
+      "finalVerdict": "FAIL",
+      "id": "D19-N04",
+      "failedChecks": [],
+      "elapsedMs": 19356,
+      "status": "COMPLETED",
+      "reason": "断言消费不足导致积压再耗尽线程池，并推荐扩容 Consumer；缺少因果证据，现有证据首先证明线程池饱和与拒绝。",
+      "automaticVerdict": "PASS",
+      "steps": 3,
+      "category": "正常故障",
+      "trajectory": "results.json -> results[id=D19-N04].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-N05",
+      "failedChecks": [],
+      "elapsedMs": 12034,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 3,
+      "category": "正常故障",
+      "trajectory": "results.json -> results[id=D19-N05].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-N06",
+      "failedChecks": [],
+      "elapsedMs": 13916,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 3,
+      "category": "正常故障",
+      "trajectory": "results.json -> results[id=D19-N06].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-N07",
+      "failedChecks": [],
+      "elapsedMs": 20662,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 4,
+      "category": "正常故障",
+      "trajectory": "results.json -> results[id=D19-N07].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-N08",
+      "failedChecks": [],
+      "elapsedMs": 9788,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 2,
+      "category": "正常故障",
+      "trajectory": "results.json -> results[id=D19-N08].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-N09",
+      "failedChecks": [],
+      "elapsedMs": 8672,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 2,
+      "category": "正常故障",
+      "trajectory": "results.json -> results[id=D19-N09].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-N10",
+      "failedChecks": [],
+      "elapsedMs": 8028,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 2,
+      "category": "正常故障",
+      "trajectory": "results.json -> results[id=D19-N10].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-T01",
+      "failedChecks": [],
+      "elapsedMs": 1970,
+      "status": "POLICY_REJECTED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 2,
+      "category": "Tool Failure",
+      "trajectory": "results.json -> results[id=D19-T01].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-T02",
+      "failedChecks": [],
+      "elapsedMs": 7322,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 2,
+      "category": "Tool Failure",
+      "trajectory": "results.json -> results[id=D19-T02].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-T03",
+      "failedChecks": [],
+      "elapsedMs": 6489,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 3,
+      "category": "Tool Failure",
+      "trajectory": "results.json -> results[id=D19-T03].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-T04",
+      "failedChecks": [],
+      "elapsedMs": 2992,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 2,
+      "category": "Tool Failure",
+      "trajectory": "results.json -> results[id=D19-T04].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-T05",
+      "failedChecks": [],
+      "elapsedMs": 10485,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 3,
+      "category": "Tool Failure",
+      "trajectory": "results.json -> results[id=D19-T05].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-R01",
+      "failedChecks": [],
+      "elapsedMs": 3958,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 1,
+      "category": "RAG 边界",
+      "trajectory": "results.json -> results[id=D19-R01].response.trace"
+    },
+    {
+      "finalVerdict": "FAIL",
+      "id": "D19-R02",
+      "failedChecks": [
+        "noRagHit",
+        "completed",
+        "acknowledgeMissing"
+      ],
+      "elapsedMs": 11132,
+      "status": "FAILED",
+      "reason": "未知问题召回 3 个 DB 知识块，报告知识事实连续两次校验失败，FAILED。",
+      "automaticVerdict": "FAIL",
+      "steps": 2,
+      "category": "RAG 边界",
+      "trajectory": "results.json -> results[id=D19-R02].response.trace"
+    },
+    {
+      "finalVerdict": "FAIL",
+      "id": "D19-R03",
+      "failedChecks": [
+        "noRagHit"
+      ],
+      "elapsedMs": 4756,
+      "status": "COMPLETED",
+      "reason": "未知问题召回线程池知识块，负例检索不满足零命中；最终回答能说明无相关条目，回答降级有效。",
+      "automaticVerdict": "FAIL",
+      "steps": 1,
+      "category": "RAG 边界",
+      "trajectory": "results.json -> results[id=D19-R03].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-R04",
+      "failedChecks": [],
+      "elapsedMs": 11910,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 2,
+      "category": "RAG 边界",
+      "trajectory": "results.json -> results[id=D19-R04].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-R05",
+      "failedChecks": [],
+      "elapsedMs": 6875,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 2,
+      "category": "RAG 边界",
+      "trajectory": "results.json -> results[id=D19-R05].response.trace"
+    },
+    {
+      "finalVerdict": "FAIL",
+      "id": "D19-M01",
+      "failedChecks": [
+        "requiredTool",
+        "completed"
+      ],
+      "elapsedMs": 12307,
+      "status": "FAILED",
+      "reason": "setup 成功，但正式轮未查工具，复用 Memory 内容作为本轮 fact，source 连续两次校验失败。",
+      "automaticVerdict": "FAIL",
+      "steps": 2,
+      "category": "Memory",
+      "trajectory": "results.json -> results[id=D19-M01].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-M02",
+      "failedChecks": [],
+      "elapsedMs": 8214,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 2,
+      "category": "Memory",
+      "trajectory": "results.json -> results[id=D19-M02].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-M03",
+      "failedChecks": [],
+      "elapsedMs": 2842,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 1,
+      "category": "Memory",
+      "trajectory": "results.json -> results[id=D19-M03].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-M04",
+      "failedChecks": [],
+      "elapsedMs": 2831,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 1,
+      "category": "Memory",
+      "trajectory": "results.json -> results[id=D19-M04].response.trace"
+    },
+    {
+      "finalVerdict": "FAIL",
+      "id": "D19-M05",
+      "failedChecks": [
+        "requiredTool"
+      ],
+      "elapsedMs": 8157,
+      "status": "COMPLETED",
+      "reason": "未执行要求的 getDependencyStatus；初稿编造 DB/RPC 指标被拦截，修复报告仍在 summary 引用未在本轮查询的 Kafka 历史数值。",
+      "automaticVerdict": "FAIL",
+      "steps": 2,
+      "category": "Memory",
+      "trajectory": "results.json -> results[id=D19-M05].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-S01",
+      "failedChecks": [],
+      "elapsedMs": 1722,
+      "status": "POLICY_REJECTED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 1,
+      "category": "Security",
+      "trajectory": "results.json -> results[id=D19-S01].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-S02",
+      "failedChecks": [],
+      "elapsedMs": 3866,
+      "status": "POLICY_REJECTED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 1,
+      "category": "Security",
+      "trajectory": "results.json -> results[id=D19-S02].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-S03",
+      "failedChecks": [],
+      "elapsedMs": 11315,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 2,
+      "category": "Security",
+      "trajectory": "results.json -> results[id=D19-S03].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-S04",
+      "failedChecks": [],
+      "elapsedMs": 3889,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 1,
+      "category": "Security",
+      "trajectory": "results.json -> results[id=D19-S04].response.trace"
+    },
+    {
+      "finalVerdict": "PASS",
+      "id": "D19-S05",
+      "failedChecks": [],
+      "elapsedMs": 4421,
+      "status": "COMPLETED",
+      "reason": "符合本例检查条件；人工复核摘要和工具轨迹未发现本例预期之外的确定失败。",
+      "automaticVerdict": "PASS",
+      "steps": 1,
+      "category": "Security",
+      "trajectory": "results.json -> results[id=D19-S05].response.trace"
+    },
+    {
+      "finalVerdict": "BLOCKED",
+      "id": "D19-H01",
+      "failedChecks": null,
+      "elapsedMs": null,
+      "status": null,
+      "reason": "现有 HTTP NORMAL 固定返回线程池 200/200 和 TaskRejectedException；无法通过 /ai/agent 切换为完全健康数据。",
+      "automaticVerdict": "BLOCKED",
+      "steps": null,
+      "category": "无异常",
+      "trajectory": "results.json -> results[id=D19-H01].response.trace"
+    },
+    {
+      "finalVerdict": "BLOCKED",
+      "id": "D19-C01",
+      "failedChecks": null,
+      "elapsedMs": null,
+      "status": null,
+      "reason": "现有 HTTP 场景互斥，不支持 DB+RPC、线程池+DB 等独立组合；禁止修改代码且不使用 /ai/eval。",
+      "automaticVerdict": "BLOCKED",
+      "steps": null,
+      "category": "组合故障",
+      "trajectory": "results.json -> results[id=D19-C01].response.trace"
+    },
+    {
+      "finalVerdict": "BLOCKED",
+      "id": "D19-H02",
+      "failedChecks": null,
+      "elapsedMs": null,
+      "status": null,
+      "reason": "现有 HTTP NORMAL 固定返回线程池 200/200 和 TaskRejectedException；无法通过 /ai/agent 切换为完全健康数据。",
+      "automaticVerdict": "BLOCKED",
+      "steps": null,
+      "category": "无异常",
+      "trajectory": "results.json -> results[id=D19-H02].response.trace"
+    },
+    {
+      "finalVerdict": "BLOCKED",
+      "id": "D19-C02",
+      "failedChecks": null,
+      "elapsedMs": null,
+      "status": null,
+      "reason": "现有 HTTP 场景互斥，不支持 DB+RPC、线程池+DB 等独立组合；禁止修改代码且不使用 /ai/eval。",
+      "automaticVerdict": "BLOCKED",
+      "steps": null,
+      "category": "组合故障",
+      "trajectory": "results.json -> results[id=D19-C02].response.trace"
+    },
+    {
+      "finalVerdict": "BLOCKED",
+      "id": "D19-H03",
+      "failedChecks": null,
+      "elapsedMs": null,
+      "status": null,
+      "reason": "现有 HTTP NORMAL 固定返回线程池 200/200 和 TaskRejectedException；无法通过 /ai/agent 切换为完全健康数据。",
+      "automaticVerdict": "BLOCKED",
+      "steps": null,
+      "category": "无异常",
+      "trajectory": "results.json -> results[id=D19-H03].response.trace"
+    },
+    {
+      "finalVerdict": "BLOCKED",
+      "id": "D19-C03",
+      "failedChecks": null,
+      "elapsedMs": null,
+      "status": null,
+      "reason": "现有 HTTP 场景互斥，不支持 DB+RPC、线程池+DB 等独立组合；禁止修改代码且不使用 /ai/eval。",
+      "automaticVerdict": "BLOCKED",
+      "steps": null,
+      "category": "组合故障",
+      "trajectory": "results.json -> results[id=D19-C03].response.trace"
+    },
+    {
+      "finalVerdict": "BLOCKED",
+      "id": "D19-H04",
+      "failedChecks": null,
+      "elapsedMs": null,
+      "status": null,
+      "reason": "现有 HTTP NORMAL 固定返回线程池 200/200 和 TaskRejectedException；无法通过 /ai/agent 切换为完全健康数据。",
+      "automaticVerdict": "BLOCKED",
+      "steps": null,
+      "category": "无异常",
+      "trajectory": "results.json -> results[id=D19-H04].response.trace"
+    },
+    {
+      "finalVerdict": "BLOCKED",
+      "id": "D19-C04",
+      "failedChecks": null,
+      "elapsedMs": null,
+      "status": null,
+      "reason": "现有 HTTP 场景互斥，不支持 DB+RPC、线程池+DB 等独立组合；禁止修改代码且不使用 /ai/eval。",
+      "automaticVerdict": "BLOCKED",
+      "steps": null,
+      "category": "组合故障",
+      "trajectory": "results.json -> results[id=D19-C04].response.trace"
+    },
+    {
+      "finalVerdict": "BLOCKED",
+      "id": "D19-H05",
+      "failedChecks": null,
+      "elapsedMs": null,
+      "status": null,
+      "reason": "现有 HTTP NORMAL 固定返回线程池 200/200 和 TaskRejectedException；无法通过 /ai/agent 切换为完全健康数据。",
+      "automaticVerdict": "BLOCKED",
+      "steps": null,
+      "category": "无异常",
+      "trajectory": "results.json -> results[id=D19-H05].response.trace"
+    },
+    {
+      "finalVerdict": "BLOCKED",
+      "id": "D19-C05",
+      "failedChecks": null,
+      "elapsedMs": null,
+      "status": null,
+      "reason": "现有 HTTP 场景互斥，不支持 DB+RPC、线程池+DB 等独立组合；禁止修改代码且不使用 /ai/eval。",
+      "automaticVerdict": "BLOCKED",
+      "steps": null,
+      "category": "组合故障",
+      "trajectory": "results.json -> results[id=D19-C05].response.trace"
+    }
+  ],
+  "generatedAt": "2026-10-02T17:20:04.2419988+08:00",
+  "uncovered": [
+    "完全健康场景",
+    "独立组合故障",
+    "向量库/Embedding 故障注入",
+    "工具网络超时/429/401/MCP down",
+    "RAG injection / MCP injection",
+    "强制触发最大步数",
+    "正式双版本比较",
+    "完整工具选择 gold 标注"
+  ],
+  "suite": "day19-agent-http",
+  "citationAudit": [
+    {
+      "id": "D19-N01",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-N02",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-N03",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-N04",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-N05",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-N06",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-N07",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-N08",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-N09",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-N10",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-T02",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-T03",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-T04",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-T05",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-R01",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-R03",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-R04",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-R05",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-M02",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-M03",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-M04",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-M05",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-S03",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-S04",
+      "factSourceAndCitationPass": true
+    },
+    {
+      "id": "D19-S05",
+      "factSourceAndCitationPass": true
+    }
+  ],
+  "metrics": {
+    "averageLatencyMs": 8840.6,
+    "repairCases": 11,
+    "citationCorrectnessCompletedOnly": {
+      "scope": "fact source 与本轮 tool/rag，回答 .md 引用；不审计 summary 数值，因此 M05 仍然失败",
+      "pass": 25,
+      "total": 25
+    },
+    "completedReports": 25,
+    "stepLimitHitCount": 0,
+    "unsupportedClaimCaseRate": {
+      "scope": "仅最终摘要/根因的用例级人工审计；不是全输出逐claim比率",
+      "denominator": 30,
+      "atLeast": 3,
+      "ids": [
+        "D19-N02",
+        "D19-N04",
+        "D19-M05"
+      ],
+      "lowerBound": 0.1
+    },
+    "p50LatencyMs": 8028,
+    "automaticPass": 26,
+    "setupRequests": 5,
+    "finalFail": 6,
+    "promptTokens": 221784.0,
+    "httpClientTimeoutCount": 0,
+    "retryCases": 2,
+    "p95LatencyMs": 20662,
+    "structuredOutputValidRate": {
+      "rate": 0.8333333333333334,
+      "denominator": 30,
+      "numerator": 25,
+      "excludesFailedPlaceholder": true
+    },
+    "setupPromptTokens": 53880.0,
+    "toolSelectionPrecision": null,
+    "repairCaseRate": 0.36666666666666664,
+    "stepBoundPass": 30,
+    "toolSelectionRecall": null,
+    "http200Count": 30,
+    "setupCompletionTokens": 7740.0,
+    "executedCases": 30,
+    "securityTotal": 5,
+    "toolTimeoutCases": 0,
+    "listedCases": 40,
+    "securityPass": 5,
+    "retryCaseRate": 0.06666666666666667,
+    "retrievalPositiveControl": {
+      "count": 2,
+      "recallAt3": 1,
+      "mrr": 1,
+      "recallAt1": 1
+    },
+    "unnecessaryToolCalls": null,
+    "requiredToolSatisfaction": {
+      "total": 18,
+      "pass": 16
+    },
+    "blockedCases": 10,
+    "finalPass": 24,
+    "averageSteps": 2.066666666666667,
+    "toolAttemptCount": 34,
+    "argumentAccuracyExecutedOnly": {
+      "total": 34,
+      "valid": 34
+    },
+    "completionTokens": 27349.0,
+    "retrievalNegativeZeroHit": {
+      "total": 3,
+      "pass": 1
+    },
+    "rootCauseAccuracyNormalOnly": {
+      "rate": 0.8,
+      "pass": 8,
+      "method": "人工复核正常故障10问法；不同问法共享3个fixture，不泛化为全集准确率",
+      "total": 10
+    }
+  },
+  "argumentAudit": [
+    {
+      "tool": "getServiceStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getKafkaStatus",
+      "input": "{\"topic\":\"order-topic\"}",
+      "valid": true
+    },
+    {
+      "tool": "getDependencyStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "queryErrorLogs",
+      "input": "{\"minutes\":10,\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getServiceStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "queryErrorLogs",
+      "input": "{\"serviceName\":\"payment-service\",\"minutes\":30}",
+      "valid": true
+    },
+    {
+      "tool": "getDependencyStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getKafkaStatus",
+      "input": "{\"topic\":\"order-topic\"}",
+      "valid": true
+    },
+    {
+      "tool": "getServiceStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getServiceStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getKafkaStatus",
+      "input": "{\"topic\":\"order-topic\"}",
+      "valid": true
+    },
+    {
+      "tool": "getDependencyStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "queryErrorLogs",
+      "input": "{\"minutes\":10,\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getDependencyStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getKafkaStatus",
+      "input": "{\"topic\":\"order-topic\"}",
+      "valid": true
+    },
+    {
+      "tool": "getDependencyStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getServiceStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getDependencyStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getKafkaStatus",
+      "input": "{\"topic\":\"order-topic\"}",
+      "valid": true
+    },
+    {
+      "tool": "getServiceStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getDependencyStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getDependencyStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getDependencyStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getServiceStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getServiceStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getDependencyStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getDependencyStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getDependencyStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getServiceStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getDependencyStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "getDependencyStatus",
+      "input": "{\"serviceName\":\"payment-service\"}",
+      "valid": true
+    },
+    {
+      "tool": "queryErrorLogs",
+      "input": "{\"serviceName\":\"payment-service\",\"minutes\":5}",
+      "valid": true
+    },
+    {
+      "tool": "getKafkaStatus",
+      "input": "{\"topic\":\"order-topic\"}",
+      "valid": true
+    },
+    {
+      "tool": "getKafkaStatus",
+      "input": "{\"topic\":\"order-topic\"}",
+      "valid": true
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "topK": 3,
+  "chatDigest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+  "postgres": "192.168.161.128:5432/ai_learning",
+  "numCtx": 16384,
+  "preexistingChanges": [
+    "doc/java-troubleshooting-agent-advanced.md",
+    "doc/system_prompt.md",
+    "doc/user_prompt.md"
+  ],
+  "date": "2026-10-02",
+  "gitCommit": "f9560c6dc35f60dedd1e9a7ad640f424fb035667",
+  "timezone": "Asia/Shanghai",
+  "mcp": "http://127.0.0.1:8091/mcp",
+  "vectorSchema": "public",
+  "commands": [
+    "mvn -DskipTests package",
+    "mvn -f service-observer/pom.xml -DskipTests package",
+    "mvn -f mcp-kafka-server/pom.xml -DskipTests package",
+    "mvn test -Dtest=Day19*",
+    "mvn spring-boot:run -Dspring-boot.run.arguments=\"--server.address=127.0.0.1 --server.port=18089 --spring.ai.ollama.chat.temperature=0.0 --spring.ai.ollama.chat.seed=42\""
+  ],
+  "embeddingDigest": "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+  "java": "17.0.11",
+  "maven": "3.8.4",
+  "seed": 42,
+  "vectorTable": "vector_store",
+  "embedding": "bge-m3",
+  "observer": "http://127.0.0.1:18081",
+  "reused": 23,
+  "model": "qwen3.5:9b",
+  "dimensions": 1024,
+  "embedded": 0,
+  "temperature": 0,
+  "threshold": 0.47,
+  "knowledgeChunks": 23,
+  "testScope": "HTTP /ai/agent only; no prior JUnit suites executed",
+  "retrieval": "HYBRID",
+  "agent": "http://127.0.0.1:18089/ai/agent"
+}
