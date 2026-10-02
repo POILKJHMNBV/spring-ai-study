@@ -161,25 +161,14 @@ public class AgentToolProvider {
          */
         ToolCallback[] mcpCallbacks = provider.getToolCallbacks();
 
-        ToolCallback kafkaMcpTool =
-                Arrays.stream(mcpCallbacks)
-                        .filter(callback ->
-                                KAFKA_TOOL_NAME.equals(
-                                        callback
-                                                .getToolDefinition()
-                                                .name()
-                                )
-                        )
-                        .findFirst()
-                        .orElseThrow(() ->
-                                new IllegalStateException(
-                                        "Kafka MCP Server "
-                                                + "未暴露 Tool: "
-                                                + KAFKA_TOOL_NAME
-                                                + "，实际发现 Tool="
-                                                + discoveredToolNames(mcpCallbacks)
-                                )
-                        );
+        List<ToolCallback> kafkaCallbacks = Arrays.stream(mcpCallbacks)
+                .filter(callback -> KAFKA_TOOL_NAME.equals(callback.getToolDefinition().name()))
+                .toList();
+        if (kafkaCallbacks.size() != 1) {
+            // 只允许唯一的命名空间内回调；不把 MCP Server 返回的工具清单写入异常或日志。
+            throw new IllegalStateException("Kafka MCP Server 必须恰好暴露一个 getKafkaStatus Tool");
+        }
+        ToolCallback kafkaMcpTool = kafkaCallbacks.get(0);
 
         callbacks.add(kafkaMcpTool);
 
@@ -197,21 +186,4 @@ public class AgentToolProvider {
                 : ToolCallbacks.from(opsTools, actionProposalTools);
     }
 
-    /**
-     * 输出 MCP Server 实际发现的 Tool 名，
-     * 方便排查工具发现问题。
-     *
-     * @param callbacks MCP Server 返回的工具回调
-     * @return 工具回调的名称列表
-     */
-    private List<String> discoveredToolNames(ToolCallback[] callbacks) {
-
-        return Arrays.stream(callbacks)
-                .map(callback ->
-                        callback
-                                .getToolDefinition()
-                                .name()
-                )
-                .toList();
-    }
 }

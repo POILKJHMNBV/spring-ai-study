@@ -107,12 +107,11 @@ public class KnowledgeRetriever {
         log.info("RAG mode={} topK={} threshold={} hits={} elapsedMs={}",
                 mode, limit, cutoff, chunks.size(),
                 stopWatch.getTotalTimeMillis());
-        // 逐条日志：记录每个结果的排名和元数据，便于排查检索质量。
+        // 逐条日志只保留排名和相似度；来源、正文及自定义 metadata 都可能含有不可信文本。
         for (int i = 0; i < chunks.size(); i++) {
             RetrievedChunk hit = chunks.get(i);
             // score 是向量相似度，不是诊断结论的置信概率。
-            log.info("RAG rank={} source={} section={} domain={} chunkId={} score={}",
-                    i + 1, hit.source(), hit.section(), hit.domain(), hit.chunkId(), hit.score());
+            log.info("RAG rank={} score={}", i + 1, hit.score());
         }
         return chunks;
     }
@@ -204,14 +203,15 @@ public class KnowledgeRetriever {
         String expectedDomain;
         try {
             expectedDomain = MarkdownSectionSplitter.domain(source);
-        } catch (IllegalArgumentException exception) {
-            throw new IllegalStateException("索引候选来源未登记: " + source, exception);
+        } catch (IllegalArgumentException ignored) {
+            // source 来自向量库 metadata，属于不可信输入；异常和 cause 均不得向外暴露。
+            throw new IllegalStateException("索引候选来源未登记");
         }
         // 第二步：检查 domain 元数据是否与文件名对应的领域一致，防止数据污染。
         // 第三步：检查 section 元数据是否存在且非空，确保检索结果可定位到具体小节。
         if (!expectedDomain.equals(document.getMetadata().get("domain"))
                 || !(document.getMetadata().get("section") instanceof String section) || section.isBlank()) {
-            throw new IllegalStateException("索引候选元数据不完整或归属错误: " + source);
+            throw new IllegalStateException("索引候选元数据不完整或归属错误");
         }
     }
 

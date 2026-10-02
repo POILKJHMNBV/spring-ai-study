@@ -2,6 +2,7 @@ package org.example.ai.harness;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.ai.rag.RetrievedChunk;
+import org.example.ai.security.ConversationSecurity;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.metadata.EmptyUsage;
@@ -250,38 +251,87 @@ public class TraceRecorder {
         ));
     }
 
-    /** 保存完整业务事件供返回值及 Eval 使用；运行日志只输出阶段、状态、耗时与 Token。 */
+    /**
+     * 脱敏后保存事件，并只向运行日志输出适用于诊断的结构性字段。
+     *
+     * @param event 尚未进入轨迹列表的业务事件
+     */
     private void add(TraceEvent event) {
-
-        events.add(event);
-
-        log.info(
-                "TRACE step={} type={} name={} status={} elapsed={}ms promptTokens={}, completionTokens={}, totalTokens={}",
+        // Trace 会随 AgentRunResult 返回，也可能被测试或管理面读取；所有自由文本字段先统一脱敏。
+        TraceEvent safeEvent = new TraceEvent(
                 event.step(),
                 event.type(),
-                event.name(),
-                event.status(),
+                sanitizeNullable(event.name()),
+                sanitizeNullable(event.input()),
+                sanitizeNullable(event.output()),
                 event.elapsedMs(),
                 event.promptTokens(),
                 event.completionTokens(),
-                event.totalTokens()
+                event.totalTokens(),
+                sanitizeNullable(event.status())
         );
+        events.add(safeEvent);
+
+        log.info(
+                "TRACE step={} type={} name={} status={} elapsed={}ms promptTokens={}, completionTokens={}, totalTokens={}",
+                safeEvent.step(),
+                safeEvent.type(),
+                safeLogLabel(safeEvent.name()),
+                safeLogLabel(safeEvent.status()),
+                safeEvent.elapsedMs(),
+                safeEvent.promptTokens(),
+                safeEvent.completionTokens(),
+                safeEvent.totalTokens()
+        );
+    }
+
+    /**
+     * 保留 null 语义并对自由文本字段统一执行凭据脱敏。
+     *
+     * @param value 可空的事件文本
+     * @return null 原样保留；非 null 文本经敏感信息脱敏后返回
+     */
+    private String sanitizeNullable(String value) {
+        return value == null ? null : ConversationSecurity.sanitizeSensitiveText(value);
+    }
+
+    /**
+     * 清理日志标签中的控制字符并限制长度，防止不可信元数据伪造多行日志。
+     *
+     * @param value 已完成凭据脱敏的事件名或状态
+     * @return 不含控制字符且不超过 128 个字符的日志字段；null 仍为 null
+     */
+    private String safeLogLabel(String value) {
+        if (value == null) {
+            return null;
+        }
+        String singleLine = value.replaceAll("[\\p{Cntrl}]", "_");
+        return singleLine.length() <= 128 ? singleLine : singleLine.substring(0, 128);
     }
 
     public List<TraceEvent> snapshot() {
         return List.copyOf(events);
     }
 
+    /**
+     * 脱敏后把可返回轨迹的文本限制在固定长度，避免超大内容挤占内存和 API 响应。
+     *
+     * @param value 可能含敏感字段或不可信正文的事件文本
+     * @return 已脱敏的原文或截断摘要；null 保持为 null
+     */
     private String truncate(String value) {
 
         if (value == null) {
             return null;
         }
 
+        // 先完整脱敏再截断，避免只保留 JSON 凭据的开头而丢失结束引号。
+        String sanitized = ConversationSecurity.sanitizeSensitiveText(value);
+
         int max = 10000;
 
-        return value.length() <= max
-                ? value
-                : value.substring(0, max) + "...";
+        return sanitized.length() <= max
+                ? sanitized
+                : sanitized.substring(0, max) + "...";
     }
 }

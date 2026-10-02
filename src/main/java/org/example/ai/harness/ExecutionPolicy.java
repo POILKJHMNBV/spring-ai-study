@@ -4,11 +4,12 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 工具调用安全策略：在工具执行前校验调用合法性，防止越权、滥用或死循环。
@@ -41,6 +42,9 @@ public class ExecutionPolicy {
      */
     private static final int MAX_TOOL_CALLS_PER_RUN = 8;
 
+    /** 单次日志工具查询最多回看一天，作为限制数据暴露窗口的应用侧资源上限。 */
+    private static final int MAX_LOG_QUERY_MINUTES = 1440;
+
     /**
      * 工具白名单：只允许调用这些工具，防止 LLM 幻觉调用不存在的工具。
      */
@@ -67,16 +71,12 @@ public class ExecutionPolicy {
     );
 
     /**
-     * 提案参数额外拒绝重复字段和尾随 JSON，避免策略解析与工具回调解释不同。
+     * 所有工具参数共用严格解析器，拒绝重复字段和尾随 JSON，避免策略解析与工具回调解释不同。
      */
-    private static final ObjectMapper STRICT_TOOL_ARGUMENT_MAPPER = JsonMapper.builder()
+    private static final JsonMapper STRICT_TOOL_ARGUMENT_MAPPER = JsonMapper.builder()
             .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS,
                     DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY)
             .build();
-    /**
-     * 兼容已有只读工具的参数解析器。
-     */
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * 创建一次 Agent 请求专用的策略状态。
@@ -117,27 +117,38 @@ public class ExecutionPolicy {
                 throw new PolicyViolationException("Tool not allowed: " + toolName);
             }
 
-            JsonNode arguments = "proposeScaleConsumer".equals(toolName)
-                    ? parseScaleProposalArguments(call.arguments())
-                    : parseArguments(call.arguments());
+            JsonNode arguments = parseArguments(call.arguments());
 
             // 2. 参数权限
             switch (toolName) {
                 case "getKafkaStatus" -> {
-
-                    String topic = arguments.path("topic").asString();
+                    requireExactFields(arguments, Set.of("topic"));
+                    String topic = requireString(arguments, "topic");
 
                     if (!ALLOWED_TOPICS.contains(topic)) {
-                        throw new PolicyViolationException("Topic not allowed: " + topic);
+                        throw new PolicyViolationException("Topic is not allowed");
                     }
                 }
 
                 case "getServiceStatus", "getDependencyStatus", "queryErrorLogs" -> {
-
-                    String serviceName = arguments.path("serviceName").asString();
+                    Set<String> fields = "queryErrorLogs".equals(toolName)
+                            ? Set.of("serviceName", "minutes") : Set.of("serviceName");
+                    requireExactFields(arguments, fields);
+                    String serviceName = requireString(arguments, "serviceName");
 
                     if (!ALLOWED_SERVICES.contains(serviceName)) {
-                        throw new PolicyViolationException("Service not allowed: " + serviceName);
+                        throw new PolicyViolationException("Service is not allowed");
+                    }
+                    if ("queryErrorLogs".equals(toolName)) {
+                        JsonNode minutesNode = arguments.get("minutes");
+                        if (minutesNode == null || !minutesNode.isIntegralNumber()
+                                || !minutesNode.canConvertToInt()) {
+                            throw new PolicyViolationException("Tool arguments have invalid types");
+                        }
+                        int minutes = minutesNode.intValue();
+                        if (minutes < 1 || minutes > MAX_LOG_QUERY_MINUTES) {
+                            throw new PolicyViolationException("Log query window is outside the allowed range");
+                        }
                     }
                 }
 
@@ -158,7 +169,7 @@ public class ExecutionPolicy {
     }
 
     /**
-     * 解析已有只读工具参数，并为策略异常保留底层解析原因但不回显原始输入。
+     * 严格解析全部工具参数，确保根节点为对象；固定拒绝原因不携带异常 cause 或原始输入。
      *
      * @param arguments 工具回调收到的 JSON 参数文本
      * @return Jackson JSON 节点
@@ -167,32 +178,49 @@ public class ExecutionPolicy {
     private JsonNode parseArguments(String arguments) {
 
         try {
-            return objectMapper.readTree(arguments);
-        } catch (Exception e) {
-            // 原始参数可能包含不可信文本；拒绝信息只报告固定错误，不回显模型内容。
-            throw new PolicyViolationException("Invalid tool arguments", e);
-        }
-    }
-
-    /**
-     * 严格解析提案参数；此方法只用于新增的副作用提案工具，不改变既有只读工具的历史解析行为。
-     *
-     * @param arguments 模型生成的 JSON 参数文本
-     * @return 拒绝重复键、尾随 token 和非 JSON 对象后的参数树
-     * @throws PolicyViolationException 参数不满足严格 JSON 语法时抛出
-     */
-    private static JsonNode parseScaleProposalArguments(String arguments) {
-        try {
             JsonNode parsed = STRICT_TOOL_ARGUMENT_MAPPER.readTree(arguments);
             if (parsed == null || !parsed.isObject()) {
-                throw new PolicyViolationException("Scale proposal arguments must be a JSON object");
+                throw new PolicyViolationException("Tool arguments must be a JSON object");
             }
             return parsed;
         } catch (PolicyViolationException exception) {
             throw exception;
         } catch (RuntimeException exception) {
-            throw new PolicyViolationException("Scale proposal arguments are not strict JSON", exception);
+            // 某些 JSON 库会把原始输入写入解析异常；不可将该异常保留为 cause。
+            throw new PolicyViolationException("Tool arguments are not strict JSON");
         }
+    }
+
+    /**
+     * 检查参数对象恰好只包含工具契约声明的字段。
+     *
+     * @param arguments 已通过严格解析的 JSON 对象
+     * @param expectedFields 当前工具唯一允许的字段集合
+     * @throws PolicyViolationException 字段有缺失或额外字段时抛出固定错误
+     */
+    private static void requireExactFields(JsonNode arguments, Set<String> expectedFields) {
+        Set<String> actualFields = arguments.properties().stream()
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toUnmodifiableSet());
+        if (!actualFields.equals(expectedFields)) {
+            throw new PolicyViolationException("Tool arguments have missing or unsupported fields");
+        }
+    }
+
+    /**
+     * 读取严格的 JSON 字符串参数，禁止数字、布尔值或对象被宽松转换为字符串。
+     *
+     * @param arguments 已解析的 JSON 对象
+     * @param fieldName 必需字段名
+     * @return 指定字段的字符串值
+     * @throws PolicyViolationException 字段不存在或类型不是 JSON 字符串时抛出
+     */
+    private static String requireString(JsonNode arguments, String fieldName) {
+        JsonNode value = arguments.get(fieldName);
+        if (value == null || !value.isString()) {
+            throw new PolicyViolationException("Tool arguments have invalid types");
+        }
+        return value.stringValue();
     }
 
     /**
@@ -209,13 +237,7 @@ public class ExecutionPolicy {
         if (arguments == null || !arguments.isObject()) {
             throw new PolicyViolationException("Scale proposal arguments must be a JSON object");
         }
-        Set<String> expectedFields = Set.of("topic", "replicas", "reason");
-        Set<String> actualFields = arguments.properties().stream()
-                .map(java.util.Map.Entry::getKey)
-                .collect(java.util.stream.Collectors.toUnmodifiableSet());
-        if (!actualFields.equals(expectedFields)) {
-            throw new PolicyViolationException("Scale proposal has missing or unsupported fields");
-        }
+        requireExactFields(arguments, Set.of("topic", "replicas", "reason"));
 
         JsonNode topicNode = arguments.get("topic");
         JsonNode replicasNode = arguments.get("replicas");

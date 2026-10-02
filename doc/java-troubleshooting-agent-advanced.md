@@ -870,11 +870,14 @@ Policy 是硬约束
 
 ### 验收
 
-- [ ] Prompt Injection 不能突破 Java Policy；
-- [ ] RAG 内容不能获得系统权限；
-- [ ] 敏感内容不会进入日志；
-- [ ] Approval 不能被自然语言绕过；
-- [ ] Security Eval 可一键运行。
+- [x] Prompt Injection 不能突破 Java Policy（固定恶意模型请求与整批调用门禁验证）；
+- [x] RAG 内容不能获得系统权限（真实 PGVector 注入样本进入普通消息，越权执行被拒绝）；
+- [x] 敏感内容不会进入日志（已定义凭据格式、异常 cause、Trace 与响应泄漏专项验证）；
+- [x] Approval 不能被自然语言绕过（伪造批准字段被拒绝，合法提案声称批准仍保持待审批）；
+- [x] Security Eval 可一键运行（本机 Maven，17 项 Day17 专项全部通过）。
+
+仅验收 `/ai/agent` 链路；官方依据、真实数据库/MCP 实测及子 Agent 评估见
+[Day17 实验记录](experiments/day17-security.md)。
 
 ---
 
